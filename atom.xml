@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2025-07-18T06:08:30.579Z</updated>
+  <updated>2025-07-22T16:29:33.185Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,23 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>伯恩斯坦谈论贝多芬第六&amp;第七交响曲</title>
+    <link href="http://example.com/2025/07/23/%E4%BC%AF%E6%81%A9%E6%96%AF%E5%9D%A6%E8%B0%88%E8%AE%BA%E8%B4%9D%E5%A4%9A%E8%8A%AC%E7%AC%AC%E5%85%AD&amp;%E7%AC%AC%E4%B8%83%E4%BA%A4%E5%93%8D%E6%9B%B2/"/>
+    <id>http://example.com/2025/07/23/%E4%BC%AF%E6%81%A9%E6%96%AF%E5%9D%A6%E8%B0%88%E8%AE%BA%E8%B4%9D%E5%A4%9A%E8%8A%AC%E7%AC%AC%E5%85%AD&amp;%E7%AC%AC%E4%B8%83%E4%BA%A4%E5%93%8D%E6%9B%B2/</id>
+    <published>2025-07-22T16:24:58.000Z</published>
+    <updated>2025-07-22T16:29:33.185Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;Bernstein-Beethoven - Leonard Bernstein and Maximilian Schell on Beethoven’s Symphony No. 6&lt;/p&gt;</summary>
+    
+    
+    
+    
+    <category term="音乐" scheme="http://example.com/tags/%E9%9F%B3%E4%B9%90/"/>
+    
+  </entry>
   
   <entry>
     <title>都道府县与县厅所在地</title>
@@ -78,7 +95,7 @@
     <link href="http://example.com/2025/07/17/%E4%BD%9B%E6%95%99%E6%A6%82%E8%AE%BA/"/>
     <id>http://example.com/2025/07/17/%E4%BD%9B%E6%95%99%E6%A6%82%E8%AE%BA/</id>
     <published>2025-07-17T01:31:40.000Z</published>
-    <updated>2025-07-22T01:14:02.171Z</updated>
+    <updated>2025-07-22T16:16:29.920Z</updated>
     
     
     <summary type="html">&lt;p&gt;24spring 佛教概论笔记&lt;/p&gt;</summary>
