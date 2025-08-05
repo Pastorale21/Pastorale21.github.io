@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2025-07-22T16:29:33.185Z</updated>
+  <updated>2025-08-05T07:02:54.072Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Full Stack Open Notes</title>
+    <link href="http://example.com/2025/08/05/Full-Stack-Open-Notes/"/>
+    <id>http://example.com/2025/08/05/Full-Stack-Open-Notes/</id>
+    <published>2025-08-05T07:01:10.000Z</published>
+    <updated>2025-08-05T07:02:54.072Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;&lt;strong&gt;一些常用命令&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;npm create vite@latest&lt;/li&gt;
+&lt;li&gt;npm run dev&lt;/li&gt;
+&lt;li&gt;npm run</summary>
+        
+      
+    
+    
+    
+    
+    <category term="CS" scheme="http://example.com/tags/CS/"/>
+    
+  </entry>
   
   <entry>
     <title>伯恩斯坦谈论贝多芬第六&amp;第七交响曲</title>
