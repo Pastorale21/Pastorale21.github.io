@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2025-08-05T07:05:07.527Z</updated>
+  <updated>2025-11-06T03:17:31.023Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,52 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>「禪畫研究」筆記</title>
+    <link href="http://example.com/2025/11/06/%E3%80%8C%E7%A6%AA%E7%95%AB%E7%A0%94%E7%A9%B6%E3%80%8D%E7%AD%86%E8%A8%98/"/>
+    <id>http://example.com/2025/11/06/%E3%80%8C%E7%A6%AA%E7%95%AB%E7%A0%94%E7%A9%B6%E3%80%8D%E7%AD%86%E8%A8%98/</id>
+    <published>2025-11-06T03:16:04.000Z</published>
+    <updated>2025-11-06T03:17:31.023Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1&gt;上 禅宗与绘画&lt;/h1&gt;
+&lt;p&gt;《维摩诘经》俗谛即道场 直心即道场——青青翠竹尽是法身，郁郁黄花无非般若&lt;br&gt;
+禅宗总是强调不离现世生活的解脱路径&lt;/p&gt;
+&lt;p&gt;士大夫和佛教不可分的主要原因在于玄理之契合、文字之因缘、死生之恐惧三点。&lt;/p&gt;
+&lt;h1&gt;下</summary>
+        
+      
+    
+    
+    
+    
+    <category term="佛教" scheme="http://example.com/tags/%E4%BD%9B%E6%95%99/"/>
+    
+    <category term="阅读" scheme="http://example.com/tags/%E9%98%85%E8%AF%BB/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>「神风与铜钱」随记</title>
+    <link href="http://example.com/2025/11/06/%E7%A5%9E%E9%A3%8E%E4%B8%8E%E9%93%9C%E9%92%B1%E9%9A%8F%E8%AE%B0/"/>
+    <id>http://example.com/2025/11/06/%E7%A5%9E%E9%A3%8E%E4%B8%8E%E9%93%9C%E9%92%B1%E9%9A%8F%E8%AE%B0/</id>
+    <published>2025-11-06T02:58:54.000Z</published>
+    <updated>2025-11-06T03:15:25.385Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;蒙古袭来后的百年&lt;/p&gt;</summary>
+    
+    
+    
+    
+    <category term="阅读" scheme="http://example.com/tags/%E9%98%85%E8%AF%BB/"/>
+    
+  </entry>
   
   <entry>
     <title>Full Stack Open Notes</title>

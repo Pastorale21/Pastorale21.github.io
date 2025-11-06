@@ -1,0 +1,28 @@
+/* 主体字号略大、行距更舒服 */
+body {
+  font-size: 17.5px !important;
+  line-height: 1.75 !important;
+  letter-spacing: 0.1px;
+}
+
+/* 标题层级稍收一点 */
+body h1 { font-size: 30px !important; }
+body h2 { font-size: 26px !important; }
+body h3 { font-size: 22px !important; }
+body h4 { font-size: 20px !important; }
+body h5 { font-size: 18px !important; }
+body h6 { font-size: 16px !important; }
+
+/* 移动端再微调 */
+@media (max-width: 768px), (max-height: 600px) {
+  body {
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+  }
+  body h1 { font-size: 26px !important; }
+  body h2 { font-size: 22px !important; }
+  body h3 { font-size: 20px !important; }
+  body h4 { font-size: 18px !important; }
+  body h5 { font-size: 16px !important; }
+  body h6 { font-size: 15px !important; }
+}
