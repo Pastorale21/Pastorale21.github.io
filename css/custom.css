@@ -1,0 +1,22 @@
+/* Pastorele 自定义样式 */
+
+.sidebar-subscribe {
+    margin-top: 20px;
+}
+
+.btn-subscribe {
+    display: block;
+    padding: 10px 15px;
+    background: #2e405b;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+.btn-subscribe:hover {
+    opacity: 0.9;
+    color: #fff;
+    background: #000;
+}
