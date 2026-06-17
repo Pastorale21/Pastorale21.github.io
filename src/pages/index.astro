@@ -14,23 +14,20 @@ const blog = (await getCollection("blog"))
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
   <Container>
-    <aside data-pagefind-ignore>
-      <h1 class="font-semibold text-black dark:text-white">喫茶去</h1>
-      <div class="space-y-16">
-        <section>
-          <article class="space-y-4">
-            <p>
-              「喫茶去」是赵州和尚的三字公案。此处存放读书、佛学、日本史与音乐的随记。
-            </p>
-          </article>
-        </section>
+    <aside data-pagefind-ignore class="mx-auto max-w-2xl text-center">
+      <div class="space-y-20">
+        <header class="space-y-4">
+          <h1 class="text-3xl font-semibold text-black sm:text-4xl dark:text-white">
+            喫茶去
+          </h1>
+          <p class="leading-relaxed text-black/70 dark:text-white/70">
+            「喫茶去」是赵州和尚的三字公案。此处存放读书、佛学、日本史与音乐的随记。
+          </p>
+        </header>
 
-        <section class="animate space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-y-2">
-            <h2 class="font-semibold text-black dark:text-white">近期文章</h2>
-            <Link href="/blog">查看全部</Link>
-          </div>
-          <ul class="not-prose space-y-14">
+        <section class="animate space-y-10">
+          <h2 class="font-semibold text-black dark:text-white">近期文章</h2>
+          <ul class="not-prose space-y-16">
             {
               blog.map((post) => (
                 <li>
@@ -39,11 +36,14 @@ const blog = (await getCollection("blog"))
               ))
             }
           </ul>
+          <div>
+            <Link href="/blog">查看全部 →</Link>
+          </div>
         </section>
 
         <section class="animate space-y-4">
           <h2 class="font-semibold text-black dark:text-white">联系</h2>
-          <ul class="not-prose flex flex-wrap gap-2">
+          <ul class="not-prose flex flex-wrap justify-center gap-2">
             {
               SOCIALS.map((SOCIAL) => (
                 <li class="flex gap-x-2 text-nowrap">
