@@ -5,7 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: Geist Sans, ui-sans-serif, system-ui, sans-serif,
+  --font-sans: 'Charter', 'Bitstream Charter', Cambria, Georgia, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Source Han Sans SC', serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: Geist Mono, ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
@@ -67,9 +68,11 @@
   }
 
   article {
-    @apply prose prose-neutral max-w-full dark:prose-invert prose-img:mx-auto prose-img:my-auto;
+    @apply prose prose-neutral max-w-full dark:prose-invert;
     @apply prose-headings:font-semibold;
     @apply prose-headings:text-black dark:prose-headings:text-white;
+    @apply prose-p:leading-[1.9] prose-li:leading-[1.9];
+    @apply prose-img:mx-auto prose-img:block prose-img:rounded-md prose-img:border prose-img:border-black/10 dark:prose-img:border-white/10;
   }
 }
 

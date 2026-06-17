@@ -1,19 +1,21 @@
 ---
 import type { Heading } from "./TableOfContents.astro";
-import Link from "./Link.astro";
 
 // https://kld.dev/building-table-of-contents/
 
 const { heading } = Astro.props;
 ---
 
-<li class="list-inside list-disc px-6 py-1.5 text-sm">
-  <Link href={"#" + heading.slug} underline>
+<li>
+  <a
+    href={"#" + heading.slug}
+    class="block truncate py-1 text-black/55 transition-colors duration-200 ease-in-out hover:text-black dark:text-white/55 dark:hover:text-white"
+  >
     {heading.text}
-  </Link>
+  </a>
   {
     heading.subheadings.length > 0 && (
-      <ul class="translate-x-3">
+      <ul class="ml-4 space-y-0.5">
         {heading.subheadings.map((subheading: Heading) => (
           <Astro.self heading={subheading} />
         ))}
