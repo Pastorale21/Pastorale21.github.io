@@ -30,11 +30,11 @@ const blog = (await getCollection("blog"))
             <h2 class="font-semibold text-black dark:text-white">近期文章</h2>
             <Link href="/blog">查看全部</Link>
           </div>
-          <ul class="not-prose space-y-10">
+          <ul class="not-prose space-y-14">
             {
               blog.map((post) => (
                 <li>
-                  <PostListItem entry={post} />
+                  <PostListItem entry={post} centered />
                 </li>
               ))
             }
