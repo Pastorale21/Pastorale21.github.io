@@ -9,8 +9,8 @@
      text -> ui-serif, Georgia, Cambria, "Times New Roman", serif
      monospace -> "SFMono-Regular", Consolas, "Liberation Mono", monospace
      (CJK + emoji fallbacks kept so Chinese text still renders) */
-  --font-sans: ui-serif, Georgia, Cambria, 'Times New Roman', 'Songti SC',
-    'STSong', 'SimSun', 'Source Han Serif SC', 'Noto Serif CJK SC', serif,
+  --font-sans: ui-serif, Georgia, Cambria, 'Times New Roman', 'Noto Serif SC',
+    'Source Han Serif SC', 'Songti SC', 'STSong', 'SimSun', serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
