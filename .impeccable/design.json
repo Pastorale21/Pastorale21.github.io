@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-17",
+  "title": "Design System: 喫茶去",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(38% 0.004 90)",
+        "hexApprox": "#353534",
+        "tonalRamp": [
+          "oklch(15% 0.004 90)",
+          "oklch(22% 0.004 90)",
+          "oklch(30% 0.004 90)",
+          "oklch(38% 0.004 90)",
+          "oklch(50% 0.004 90)",
+          "oklch(64% 0.005 92)",
+          "oklch(80% 0.005 93)",
+          "oklch(95% 0.005 95)"
+        ]
+      },
+      "rice-cream": {
+        "role": "neutral",
+        "displayName": "Rice Cream",
+        "canonical": "oklch(96.8% 0.005 95)",
+        "hexApprox": "#f6f5f1",
+        "tonalRamp": [
+          "oklch(20% 0.013 68)",
+          "oklch(30% 0.01 80)",
+          "oklch(45% 0.008 85)",
+          "oklch(60% 0.007 90)",
+          "oklch(75% 0.006 92)",
+          "oklch(86% 0.005 94)",
+          "oklch(92% 0.005 95)",
+          "oklch(96.8% 0.005 95)"
+        ]
+      },
+      "warm-off-white": {
+        "role": "neutral",
+        "displayName": "Warm Off-White",
+        "canonical": "oklch(94% 0.008 92)",
+        "hexApprox": "#ece9e3",
+        "tonalRamp": [
+          "oklch(22% 0.008 90)",
+          "oklch(34% 0.008 90)",
+          "oklch(48% 0.008 91)",
+          "oklch(62% 0.008 91)",
+          "oklch(76% 0.008 92)",
+          "oklch(86% 0.008 92)",
+          "oklch(91% 0.008 92)",
+          "oklch(94% 0.008 92)"
+        ]
+      },
+      "deep-ink-surface": {
+        "role": "neutral",
+        "displayName": "Deep Ink Surface",
+        "canonical": "oklch(20% 0.013 68)",
+        "hexApprox": "#211d18",
+        "tonalRamp": [
+          "oklch(14% 0.012 66)",
+          "oklch(20% 0.013 68)",
+          "oklch(28% 0.013 70)",
+          "oklch(38% 0.012 74)",
+          "oklch(50% 0.011 80)",
+          "oklch(64% 0.009 86)",
+          "oklch(80% 0.007 90)",
+          "oklch(93% 0.006 93)"
+        ]
+      },
+      "terracotta-coral": {
+        "role": "primary",
+        "displayName": "Terracotta Coral",
+        "canonical": "oklch(49% 0.155 33)",
+        "hexApprox": "#a8482f",
+        "tonalRamp": [
+          "oklch(28% 0.10 32)",
+          "oklch(36% 0.13 32)",
+          "oklch(43% 0.15 33)",
+          "oklch(49% 0.155 33)",
+          "oklch(58% 0.15 34)",
+          "oklch(68% 0.13 35)",
+          "oklch(80% 0.09 37)",
+          "oklch(92% 0.04 40)"
+        ]
+      },
+      "terracotta-coral-bright": {
+        "role": "primary",
+        "displayName": "Terracotta Coral (Dark Mode)",
+        "canonical": "oklch(72% 0.13 35)",
+        "hexApprox": "#e0876a",
+        "tonalRamp": [
+          "oklch(40% 0.13 33)",
+          "oklch(50% 0.14 34)",
+          "oklch(60% 0.14 34)",
+          "oklch(72% 0.13 35)",
+          "oklch(80% 0.11 36)",
+          "oklch(86% 0.08 38)",
+          "oklch(91% 0.05 40)",
+          "oklch(95% 0.025 45)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Article title (h1). The single large, bold element on a page." },
+      "headline": { "displayName": "Headline", "purpose": "Structural section labels (近期文章, 联系). Bold but small." },
+      "title": { "displayName": "Title", "purpose": "Post title inside a list. Regular weight, one size up from body, coral on hover." },
+      "body": { "displayName": "Body", "purpose": "Prose. 1.9 line-height for Chinese readability, capped at a 42rem column." },
+      "label": { "displayName": "Label", "purpose": "Quiet kickers like the table-of-contents marker (目录). Bold, tracked, low-contrast." }
+    },
+    "shadows": [
+      { "name": "overlay-float", "value": "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)", "purpose": "The single resting shadow, used only on the floating search overlay panel. Surfaces are otherwise flat." }
+    ],
+    "motion": [
+      { "name": "state-transition", "value": "300ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default for color/background hover and focus transitions (duration-300 ease-in-out)." },
+      { "name": "reveal-on-load", "value": "transform + opacity, 300ms ease-out, staggered 100ms per element", "purpose": "The .animate entrance: elements rise from -0.75rem and fade in, staggered down the page." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "reading-column", "value": "42rem" },
+      { "name": "container", "value": "64rem (max-w-5xl)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Borderless Post Entry",
+      "kind": "custom",
+      "refersTo": "post-link-title",
+      "description": "Signature list entry: muted date, regular-weight serif title, optional cover image, clamped two-line excerpt. No box, no border.",
+      "html": "<a class=\"ds-post-entry\" href=\"#\"><span class=\"ds-post-date\">2025年7月20日</span><h3 class=\"ds-post-title\">启蒙思想家与日本近代化笔记</h3><p class=\"ds-post-excerpt\">明治启蒙思想家如何推动日本近代化的读书笔记。</p></a>",
+      "css": ".ds-post-entry { display: block; max-width: 42rem; text-decoration: none; font-family: ui-serif, Georgia, Cambria, 'Noto Serif SC', 'Songti SC', serif; } .ds-post-date { display: block; font-size: 0.875rem; color: oklch(38% 0.004 90 / 0.5); } .ds-post-title { margin: 0.25rem 0 0; font-size: 1.125rem; font-weight: 400; line-height: 1.4; color: oklch(38% 0.004 90); transition: color 300ms cubic-bezier(0.4,0,0.2,1); } .ds-post-entry:hover .ds-post-title, .ds-post-entry:focus-visible .ds-post-title { color: oklch(49% 0.155 33); } .ds-post-excerpt { margin: 0.75rem 0 0; font-size: 0.875rem; line-height: 1.6; color: oklch(38% 0.004 90 / 0.6); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }"
+    },
+    {
+      "name": "Tag Chip",
+      "kind": "chip",
+      "refersTo": "tag-chip",
+      "description": "The one bordered inline element. Transparent fill, hairline Ink border, tonal hover tint.",
+      "html": "<a class=\"ds-tag\" href=\"#\">佛教</a>",
+      "css": ".ds-tag { display: inline-block; font-family: ui-serif, Georgia, Cambria, 'Noto Serif SC', 'Songti SC', serif; font-size: 0.875rem; color: oklch(38% 0.004 90); border: 1px solid oklch(38% 0.004 90 / 0.15); border-radius: 0.25rem; padding: 4px 8px; text-decoration: none; transition: background 300ms cubic-bezier(0.4,0,0.2,1), color 300ms cubic-bezier(0.4,0,0.2,1); } .ds-tag:hover, .ds-tag:focus-visible { background: oklch(38% 0.004 90 / 0.05); }"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "icon-button",
+      "description": "The only button type: square icon control (theme toggle, back-to-top). Transparent fill, hairline border, icon pulse on hover.",
+      "html": "<button class=\"ds-icon-btn\" aria-label=\"Light theme\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\"></circle><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line></svg></button>",
+      "css": ".ds-icon-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid oklch(38% 0.004 90 / 0.15); border-radius: 0.25rem; background: transparent; color: oklch(38% 0.004 90); cursor: pointer; transition: background 300ms cubic-bezier(0.4,0,0.2,1); } .ds-icon-btn:hover, .ds-icon-btn:focus-visible { background: oklch(38% 0.004 90 / 0.05); }"
+    },
+    {
+      "name": "Inline Link",
+      "kind": "custom",
+      "refersTo": "post-link-title",
+      "description": "In-prose link: subtle Ink underline that warms to Terracotta Coral on hover.",
+      "html": "<a class=\"ds-link\" href=\"#\">赵州和尚</a>",
+      "css": ".ds-link { font-family: ui-serif, Georgia, Cambria, 'Noto Serif SC', 'Songti SC', serif; color: oklch(38% 0.004 90); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: oklch(38% 0.004 90 / 0.3); transition: color 300ms cubic-bezier(0.4,0,0.2,1), text-decoration-color 300ms cubic-bezier(0.4,0,0.2,1); } .ds-link:hover, .ds-link:focus-visible { color: oklch(49% 0.155 33); text-decoration-color: oklch(49% 0.155 33); }"
+    },
+    {
+      "name": "Kicker Label",
+      "kind": "custom",
+      "refersTo": "label",
+      "description": "Quiet bold-tracked marker, e.g. the table-of-contents heading 目录.",
+      "html": "<p class=\"ds-kicker\">目录</p>",
+      "css": ".ds-kicker { margin: 0; font-family: ui-serif, Georgia, Cambria, 'Noto Serif SC', 'Songti SC', serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: oklch(38% 0.004 90 / 0.45); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "温暖的读物间 (The Warm Reading Room)",
+    "overview": "喫茶去 is a quiet, warm room made of paper and ink. The name is Zhaozhou's three-character koan, 'go drink tea,' and the surface behaves like a tea-bright study for notes on Buddhism, Japanese history, and music. Warm cream paper holds soft charcoal type, a single terracotta accent appears only where a hand would point, and the rhythm is generous and unhurried. The room is deliberately under-decorated because it will grow: a future photography section will hang on these same walls, so the system commits to restraint that can host imagery without redecorating. It rejects the mass-produced AI SaaS landing page and the dark neon tech surface by name.",
+    "keyCharacteristics": [
+      "Warm paper ground, soft charcoal ink, one terracotta accent. Calm by construction.",
+      "Serif throughout, tuned for Chinese reading, with an airy 1.9 line-height.",
+      "Flat. Depth comes from hairline borders and tonal tints, not shadows.",
+      "Borderless, typographic lists. No card grids.",
+      "Built to welcome photography later without changing its bones."
+    ],
+    "rules": [
+      { "name": "The One Chroma Rule", "body": "Terracotta Coral is the only saturated color on any screen, reserved for interaction and emphasis. No second color, no filled accent panel.", "section": "colors" },
+      { "name": "The Tinted Neutral Rule", "body": "Pure #000 and #fff are forbidden. Every neutral is warm-tinted toward the paper hue; borders and tints are opacity-stepped Ink.", "section": "colors" },
+      { "name": "The Two-Weight Rule", "body": "The serif ships only at 400 and 700. For Chinese, font-medium renders 400 and font-semibold renders 700, so weight is binary. Build hierarchy from size and color, not imaginary mid-weights.", "section": "typography" },
+      { "name": "The Masthead-Anchor Rule", "body": "The bold brand 喫茶去 in the header is the heaviest text in the chrome. List titles sit one size up but stay regular weight so they never out-shout it.", "section": "typography" },
+      { "name": "The Flat-Paper Rule", "body": "Surfaces are flat at rest. A shadow means a surface is genuinely floating (an overlay), not a card on the page. Decorative shadows and glass panels are forbidden.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Terracotta Coral (oklch(49% 0.155 33)) as the only saturated color, used only for hover and emphasis.",
+      "Do tint every neutral toward the warm paper hue; borders and hover states are opacity-stepped Ink (/5, /10, /15, /20).",
+      "Do set body text at 1.9 line-height and cap prose at a 42rem reading column for Chinese readability.",
+      "Do build hierarchy from size and color, because the serif only renders at 400 and 700.",
+      "Do list posts as borderless typographic entries with generous whitespace: date, title, excerpt.",
+      "Do ship real photographs when the image section arrives. One decisive picture beats a colored placeholder block.",
+      "Do keep surfaces flat; reserve shadow and blur for genuinely floating overlays (the search panel)."
+    ],
+    "donts": [
+      "Don't let it read as a mass-produced AI SaaS landing page: no centered hero, no feature-card grid, no gradient accents.",
+      "Don't turn it into a dark neon tech surface: no glowing accents, no glass panels as decoration, no cold slate or true-black ground.",
+      "Don't use #000 or #fff. Untinted neutrals are forbidden.",
+      "Don't wrap posts in bordered or rounded card boxes, and never build an identical card grid.",
+      "Don't fake a mid-weight on Chinese type; font-semibold renders the same 700 as bold and will out-shout the masthead at large sizes.",
+      "Don't use side-stripe borders, gradient text, or decorative glassmorphism.",
+      "Don't add a second accent color or fill a surface with the coral. The One Chroma Rule holds."
+    ]
+  }
+}
