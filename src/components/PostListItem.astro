@@ -18,25 +18,25 @@ const cover = getFirstImage(entry.body ?? "");
   href={`/${entry.collection}/${entry.id}`}
   class="not-prose group block"
 >
+  <div class="text-sm text-black/50 dark:text-white/50">
+    <FormattedDate date={entry.data.date} />
+  </div>
+  <h3
+    class="mt-1 text-lg text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] dark:text-white"
+  >
+    {entry.data.title}
+  </h3>
   {
     cover && (
       <img
         src={cover}
         alt={entry.data.title}
         loading="lazy"
-        class="mb-4 aspect-[16/9] w-full rounded-md border border-black/10 object-cover dark:border-white/10"
+        class="mt-3 aspect-[3/2] w-full max-w-sm rounded-md border border-black/10 object-cover dark:border-white/10"
       />
     )
   }
-  <div class="text-sm text-black/50 dark:text-white/50">
-    <FormattedDate date={entry.data.date} />
-  </div>
-  <h3
-    class="mt-1 text-lg font-semibold text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] sm:text-xl dark:text-white"
-  >
-    {entry.data.title}
-  </h3>
-  <p class="mt-1 line-clamp-2 text-sm text-black/60 dark:text-white/60">
+  <p class="mt-3 line-clamp-2 text-sm text-black/60 dark:text-white/60">
     {entry.data.description}
   </p>
 </a>
