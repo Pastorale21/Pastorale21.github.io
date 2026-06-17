@@ -1,0 +1,30 @@
+---
+// Lay images side by side, wrapping to a stack on narrow screens.
+// Children are <Image> (astro:assets) or plain <img>. The scoped rules
+// below override two things that otherwise break a flex image row:
+//   - prose-img:mx-auto (global.css) → margin:auto swallows the gap
+//   - a flex item's default min-width:auto → an image refuses to shrink
+//     below its intrinsic width, forcing an unwanted wrap to the next line.
+---
+
+<div class="image-row">
+  <slot />
+</div>
+
+<style>
+  .image-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+    margin: 1.5rem 0;
+  }
+
+  .image-row :global(img) {
+    flex: 1 1 220px;
+    min-width: 200px;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+  }
+</style>

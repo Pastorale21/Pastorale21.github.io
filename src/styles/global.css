@@ -14,6 +14,19 @@
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
+  /* Display serif for the header (masthead + nav): 京华老宋体, an old-style
+     Song with strong character. Self-hosted as an 8KB subset of just the
+     header glyphs (re-run the subset if nav labels change). Falls back to the
+     reading serif for any glyph not in the subset. */
+  --font-display: 'King Hwa Old Song', ui-serif, Georgia, Cambria,
+    'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
+
+  /* Charter (Matthew Carter's transitional serif), self-hosted via the
+     charter-webfont import in Head.astro. Reserved for the Latin title-page
+     epigraph on the home page, where its printed-book voice outclasses the
+     Georgia fallback. Not used for CJK (Charter ships no Han glyphs). */
+  --font-charter: 'Charter', Georgia, ui-serif, Cambria, serif;
+
   /* 喫茶去 palette — matched to Maggie Appleton's: cream ground + soft warm
      charcoal text (not near-black, so it never reads heavy), warm coral accent. */
   --color-black: oklch(38% 0.004 90); /* #353534 soft warm charcoal: text */
@@ -28,6 +41,16 @@
 }
 .dark {
   --accent: oklch(72% 0.13 35);
+}
+
+/* 京华老宋体 — subset to the header glyphs only (~8KB). Single master, so the
+   weight range is declared to cover the masthead's semibold without faux-bold. */
+@font-face {
+  font-family: 'King Hwa Old Song';
+  src: url('/fonts/king-hwa-old-song.subset.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 /*
@@ -75,6 +98,8 @@
     @apply fixed left-0 right-0 top-0 z-50 py-6;
     @apply bg-neutral-100/80 dark:bg-neutral-900/80;
     @apply saturate-200 backdrop-blur-xs;
+    font-family: var(--font-display);
+    font-synthesis: none;
   }
 
   main {
@@ -104,15 +129,44 @@
     color: var(--accent);
     text-decoration-color: var(--accent);
   }
+
+  /* <mark> highlight — a soft terracotta wash instead of the harsh browser
+     yellow. color:inherit keeps the ink (and fixes dark mode, where the
+     default mark would otherwise be black text on a bright fill). */
+  mark {
+    background-color: color-mix(in oklab, var(--accent) 18%, transparent);
+    color: inherit;
+    padding: 0 0.12em;
+    border-radius: 0.15em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .dark mark {
+    background-color: color-mix(in oklab, var(--accent) 26%, transparent);
+  }
 }
 
-.animate {
-  @apply -translate-y-3 opacity-0;
-  @apply transition-all duration-300 ease-out;
-}
+/*
+  Reveal-on-load enhances an already-visible default. Content is visible
+  unconditionally; the hide-then-reveal applies ONLY when JS is active
+  (html.js is set synchronously before paint in Head.astro) AND the user
+  hasn't asked to reduce motion. So a JS failure, a headless render, or a
+  reduced-motion preference all fall back to fully visible content — the
+  primary feed never ships blank.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  html.js .animate {
+    opacity: 0;
+    transform: translateY(-0.75rem);
+    transition:
+      opacity 0.3s ease-out,
+      transform 0.3s ease-out;
+  }
 
-.animate.show {
-  @apply translate-y-0 opacity-100;
+  html.js .animate.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 html #back-to-top {

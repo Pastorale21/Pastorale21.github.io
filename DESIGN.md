@@ -94,7 +94,7 @@ This system explicitly rejects two things by name. It must never read as a mass-
 A warm restrained palette: tinted near-neutrals carrying a single saturated accent, the only chroma allowed to speak.
 
 ### Primary
-- **Terracotta Coral** (`oklch(49% 0.155 33)`): the lone accent, a brick-red warm coral from Maggie Appleton's salmon family that echoes the logo's dango. It appears only on interaction and emphasis: link hover, the title of a post on hover, inline-link underlines. In dark mode it brightens to **Terracotta Coral Bright** (`oklch(72% 0.13 35)`) so it keeps its warmth against the deep ground. It is never used to fill a surface.
+- **Terracotta Coral** (`oklch(49% 0.155 33)`): the lone accent, a brick-red warm coral from Maggie Appleton's salmon family that echoes the logo's dango. It appears only on interaction and emphasis: link hover, the title of a post on hover, inline-link underlines, and the inline `<mark>` highlight (a faint ~18% accent wash, never the harsh browser yellow). In dark mode it brightens to **Terracotta Coral Bright** (`oklch(72% 0.13 35)`) so it keeps its warmth against the deep ground. It is never used to fill a surface.
 
 ### Neutral
 - **Ink** (`oklch(38% 0.004 90)`, approx `#353534`): the text color. A soft warm charcoal chosen deliberately so it never reads as heavy near-black. It also supplies every border and divider as a low-opacity tint (`/10`, `/15`, `/20`) and every hover tint (`/5`).
@@ -107,9 +107,13 @@ A warm restrained palette: tinted near-neutrals carrying a single saturated acce
 
 **The Tinted Neutral Rule.** Pure `#000` and `#fff` are forbidden. Every neutral is warm-tinted toward the paper hue. Borders and tints are opacity-stepped Ink, never a separate gray.
 
+**The Contrast Floor.** Opacity-stepped Ink is for *borders and hover tints*, not for making text quieter. Any text tint must clear WCAG AA against its ground: ≥ 4.5:1 for body and small text, ≥ 3:1 for large (≥ 18px or bold ≥ 14px). On Rice Cream that means text never drops below **Ink `/75`** (the smaller the type, the higher the floor); hierarchy steps down through *size and whitespace*, never into illegibility. "Elegant" light-gray text that fails this floor is the most common readability failure, and it is forbidden here. Dark mode (Warm Off-White on Deep Ink) clears AA comfortably at every tier, but the same floor applies.
+
 ## 3. Typography
 
-**Display / Body Font:** a single serif stack, `ui-serif, Georgia, Cambria, "Times New Roman", "Noto Serif SC", "Songti SC", serif`. Latin falls to Georgia, Chinese to self-hosted Noto Serif SC (思源宋体). One family does all the work.
+**Body / Reading Font:** a serif stack, `ui-serif, Georgia, Cambria, "Times New Roman", "Noto Serif SC", "Songti SC", serif`. Latin falls to Georgia, Chinese to self-hosted Noto Serif SC (思源宋体). This family carries everything you *read* — article prose, list titles, the post title.
+
+**Header Display Font:** 京华老宋体 (King Hwa Old Song), an old-style display Song, used **only in the header** (masthead + nav). Self-hosted as an ~8KB subset of just the header glyphs (`public/fonts/king-hwa-old-song.subset.woff2`); re-subset if the nav labels change. It falls back to the reading serif for any glyph outside the subset. The pairing is display-Song over text-Song — kin enough to stay coherent, different enough that the chrome has its own voice.
 
 **Label / Code Font:** `"SFMono-Regular", Consolas, "Liberation Mono", monospace`, used only inside code blocks.
 
@@ -120,7 +124,7 @@ A warm restrained palette: tinted near-neutrals carrying a single saturated acce
 - **Headline** (700, 1rem, line-height ~1.4): structural section labels (近期文章, 联系). Small but bold; they mark structure, they do not compete with content.
 - **Title** (400, 1.125rem, line-height ~1.4): the post title inside a list. Larger than body, but regular weight, so it reads as content and stays lighter than the bold masthead. Shifts to Terracotta Coral on hover.
 - **Body** (400, 1rem, line-height 1.9): prose. The wide line-height is intentional for Chinese readability. Measure is capped by a `42rem` reading column.
-- **Label** (700, 0.75rem / `text-xs`, letter-spacing 0.1em, color Ink `/45`): the table-of-contents marker (目录) and similar quiet kickers.
+- **Label** (700, 0.75rem / `text-xs`, letter-spacing 0.1em, color Ink `/75`): the table-of-contents marker (目录) and similar quiet kickers. Quiet comes from size and tracking, not from a contrast that drops below the floor.
 
 ### Named Rules
 **The Two-Weight Rule.** The serif ships only at 400 and 700 (both Noto Serif SC and Georgia). For Chinese text `font-medium` and `font-normal` both render 400, and `font-semibold` and `font-bold` both render 700. So weight is binary: regular or bold, nothing between. Build hierarchy from size and color, not from imaginary mid-weights. To make a Chinese heading heavier, the only real lever is 700; to make it lighter, drop to 400 and let size and full-contrast color carry it.
@@ -160,14 +164,16 @@ A single search field, surfaced in the overlay (Pagefind).
 - **Container:** Rice Cream panel, `shadow-lg`, on a blurred backdrop, opened with `/` or Cmd/Ctrl-K and dismissed with Esc.
 
 ### Navigation
-- **Header:** a frosted translucent bar, logo plus title 喫茶去 (bold) on the left, `text-sm` nav links (文章, 标签) on the right.
+- **Header:** a frosted translucent bar, set in 京华老宋体 (the Header Display Font). On the left, a 32px logo plus the masthead 喫茶去 in `font-semibold` at `text-xl` with a touch of CJK tracking (`0.06em`) — the heaviest text in the chrome. On the right, a `text-sm` nav with editorial letter-spacing (`0.08em`): the identity themes (佛教 · 日本 · 音乐, linking to their tag pages) separated by a hairline divider from the utility links (文章, 标签). Nav links carry **no underline**; hover/focus shifts them to the Terracotta accent for feedback. The display Song over the body's text Song gives the chrome its own voice without leaving the serif genre.
 - **Links:** underline at `3px` offset, decoration in Ink `/30`, deepening on hover with the text shifting toward Ink, then to Terracotta Coral for in-article links.
 
 ### Signature Component: the borderless post entry
-The post list entry (`PostListItem`) is the heart of the system. It is always borderless: a **date**, the **title** (serif 400, shifting to Terracotta Coral on hover), an optional **cover image** (auto-extracted from the post's first body image, capped at `max-w-sm`, `3/2` aspect, `0.375rem` radius, 1px border), then a two-line **excerpt** (`text-sm`, Ink `/60`, clamped). It ships in two treatments, switched by a `centered` prop:
+The post list entry (`PostListItem`) is the heart of the system. It is always borderless: a **date**, the **title** (serif 400, shifting to Terracotta Coral on hover), an optional **cover image** (auto-extracted from the post's first body image, capped at `max-w-sm`, `3/2` aspect, `0.375rem` radius, 1px border), then a two-line **excerpt** (`text-sm`, Ink `/80`, clamped). It ships in two treatments, switched by a `centered` prop:
 
-- **Featured feed (home page, `centered`):** centered and constrained to a `max-w-xl` measure, separated by `3.5rem` of whitespace. The date is a quiet kicker (`text-xs`, tracked, Ink `/45`), the title is the focal point (`text-xl`, regular), the cover is centered. Spacious and curated.
-- **Compact index (archive, tags):** left-aligned, separated by `2.5rem`. The date is `text-sm` Ink `/50`, the title is `text-lg`. Built to scan a long list.
+- **Featured feed (home page, `centered`):** centered and constrained to a `max-w-xl` measure, separated by `3.5rem` of whitespace. The date is a quiet kicker (`text-xs`, tracked, Ink `/75`), the title is the focal point (`text-2xl`, regular, balanced wrapping), the cover is centered. Spacious and curated.
+- **Compact index (archive, tags):** left-aligned, separated by `2.5rem`. The date is `text-sm` Ink `/75`, the title is `text-lg`. Built to scan a long list.
+
+Hierarchy here is carried by **size and whitespace**, not by fading text toward the background. The title is full-ink; the excerpt and date step down in size, not into illegibility (every tier clears the Contrast Floor below).
 
 Both are the fogdog-inspired editorial list: image when present, plain text when not. Never a full border or box.
 

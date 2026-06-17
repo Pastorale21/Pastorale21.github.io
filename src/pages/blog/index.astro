@@ -1,55 +1,58 @@
 ---
-import { type CollectionEntry, getCollection } from "astro:content";
+import { getCollection } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
-import PostListItem from "@components/PostListItem.astro";
+import FormattedDate from "@components/FormattedDate.astro";
 import { BLOG } from "@consts";
 
 const data = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-type Acc = {
-  [year: string]: CollectionEntry<"blog">[];
-};
+// Fogdog-style archive: group by month (newest first). Each month is a
+// borderless block — heading + title/date entries, no excerpt, no cover —
+// that flows through CSS columns without ever splitting mid-month.
+type Group = { key: string; label: string; posts: typeof data };
 
-const posts = data.reduce((acc: Acc, post) => {
-  const year = post.data.date.getFullYear().toString();
-  if (!acc[year]) {
-    acc[year] = [];
+const groups = data.reduce<Group[]>((acc, post) => {
+  const d = post.data.date;
+  const key = `${d.getFullYear()}-${d.getMonth()}`;
+  let group = acc.find((g) => g.key === key);
+  if (!group) {
+    group = { key, label: `${d.getFullYear()}年${d.getMonth() + 1}月`, posts: [] };
+    acc.push(group);
   }
-  acc[year].push(post);
+  group.posts.push(post);
   return acc;
-}, {});
-
-const years = Object.keys(posts).sort((a, b) => parseInt(b) - parseInt(a));
+}, []);
 ---
 
 <Layout title={BLOG.TITLE} description={BLOG.DESCRIPTION}>
   <Container>
-    <aside data-pagefind-ignore>
-      <div class="space-y-10">
-        <div class="space-y-16">
-          {
-            years.map((year) => (
-              <section class="animate space-y-6">
-                <div class="text-sm tracking-wide text-black/50 dark:text-white/50">
-                  {year}
-                </div>
-                <div>
-                  <ul class="not-prose space-y-10">
-                    {posts[year].map((post) => (
-                      <li>
-                        <PostListItem entry={post} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </section>
-            ))
-          }
-        </div>
+    <div data-pagefind-ignore>
+      <div class="columns-1 gap-x-12 sm:columns-2">
+        {
+          groups.map((group) => (
+            <section class="animate mb-14 break-inside-avoid">
+              <h2 class="text-2xl text-black dark:text-white">{group.label}</h2>
+              <ul class="not-prose mt-6 space-y-8">
+                {group.posts.map((post) => (
+                  <li>
+                    <a href={`/${post.collection}/${post.id}`} class="group block">
+                      <h3 class="text-balance text-lg leading-snug text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] dark:text-white">
+                        {post.data.title}
+                      </h3>
+                      <div class="mt-1 text-sm text-black/75 dark:text-white/60">
+                        <FormattedDate date={post.data.date} />
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        }
       </div>
-    </aside>
+    </div>
   </Container>
 </Layout>

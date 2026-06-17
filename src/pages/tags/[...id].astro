@@ -29,15 +29,15 @@ const sortedPosts = posts.sort(
 );
 ---
 
-<Layout title={`Tag: ${id}`} description={`Posts with the tag: ${id}`}>
+<Layout title={`标签：${id}`} description={`带有「${id}」标签的文章`}>
   <Container>
     <div class="space-y-10" data-pagefind-ignore>
-      <BackToPrevious href="/tags"> All tags </BackToPrevious>
+      <BackToPrevious href="/tags">所有标签</BackToPrevious>
       <h1 class="animate font-semibold text-black dark:text-white">
-        Posts tagged with "{id}"
+        标签「{id}」
       </h1>
       <ul class="animate space-y-10">
-        {sortedPosts.map((post) => <PostListItem entry={post} />)}
+        {sortedPosts.map((post) => <PostListItem entry={post} showCover={false} />)}
       </ul>
     </div>
   </Container>

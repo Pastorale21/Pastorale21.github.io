@@ -2,7 +2,7 @@
 title: "Zhangye"
 description: "Zhangye: a hidden gem on the Silk Road（草稿）。"
 date: "2025-07-16"
-tags: [Travelling, Pre]
+tags: [旅行]
 draft: true
 ---
 

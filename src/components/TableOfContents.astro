@@ -34,11 +34,11 @@ function buildToc(headings: Heading[]) {
 
 <nav aria-label="目录" class="text-sm">
   <p
-    class="mb-3 text-xs font-semibold tracking-widest text-black/45 dark:text-white/45"
+    class="mb-3 text-xs font-semibold tracking-widest text-black/75 dark:text-white/60"
   >
     目录
   </p>
   <ul class="space-y-0.5">
-    {toc.map((heading) => <TableOfContentsHeading heading={heading} />)}
+    {toc.map((heading) => <TableOfContentsHeading heading={heading} isRoot />)}
   </ul>
 </nav>

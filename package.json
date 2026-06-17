@@ -28,6 +28,7 @@
     "typescript": "^5.9.2"
   },
   "devDependencies": {
+    "@fontpkg/king-hwa-old-song": "^2.2.0",
     "@tailwindcss/typography": "^0.5.18",
     "pagefind": "^1.4.0",
     "prettier": "^3.6.2",

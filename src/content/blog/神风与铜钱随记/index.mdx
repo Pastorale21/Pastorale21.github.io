@@ -3,12 +3,20 @@ title: "「神风与铜钱」随记"
 description: "《神风与铜钱》读书随记：蒙古袭来后的镰仓、博多与禅宗东传。"
 date: "2025-11-06"
 tags: [阅读, 日本]
+cover: "./九州地图.png"
 ---
+
+import { Image } from "astro:assets";
+import ImageRow from "@components/ImageRow.astro";
+import kyushu from "./九州地图.png";
+import fudo from "./IMG_6244.jpeg";
 
 蒙古袭来后的百年
 
-<img src="/images/九州地图.png" width="300" />
-<img src="/images/IMG_6244.jpeg" width="300" />
+<ImageRow>
+  <Image src={kyushu} alt="九州令制国地图" />
+  <Image src={fudo} alt="浪切不动尊像" />
+</ImageRow>
 
 ---
 

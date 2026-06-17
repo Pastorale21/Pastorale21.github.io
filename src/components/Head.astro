@@ -67,7 +67,6 @@ const { title, description, image } = Astro.props;
     animate();
     updateThemeButtons();
     addCopyCodeButtons();
-    setGiscusTheme();
 
     const backToTop = document.getElementById("back-to-top");
     backToTop?.addEventListener("click", (event) => scrollToTop(event));
@@ -188,8 +187,6 @@ const { title, description, image } = Astro.props;
 
     window.getComputedStyle(css).opacity;
     document.head.removeChild(css);
-
-    setGiscusTheme();
   }
 
   function preloadTheme() {
@@ -239,17 +236,10 @@ const { title, description, image } = Astro.props;
     }
   }
 
-  const setGiscusTheme = () => {
-    const giscus = document.querySelector(".giscus-frame");
-
-    const isDark = document.documentElement.classList.contains("dark");
-
-    if (giscus) {
-      const url = new URL(giscus.src);
-      url.searchParams.set("theme", isDark ? "dark" : "light");
-      giscus.src = url.toString();
-    }
-  };
+  // Mark JS as active before first paint so the reveal-on-load animation
+  // (gated on html.js in global.css) only hides content we will reliably
+  // un-hide. Without JS the content stays visible.
+  document.documentElement.classList.add("js");
 
   document.addEventListener("DOMContentLoaded", () => init());
   document.addEventListener("astro:after-swap", () => init());

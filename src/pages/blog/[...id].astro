@@ -6,7 +6,6 @@ import { readingTime } from "@lib/utils";
 import BackToPrevious from "@components/BackToPrevious.astro";
 import PostNavigation from "@components/PostNavigation.astro";
 import TableOfContents from "@components/TableOfContents.astro";
-import Giscus from "@components/Giscus.astro";
 
 export async function getStaticPaths() {
   const posts = (await getCollection("blog"))
@@ -48,15 +47,19 @@ const prevPost = getPrevPost();
 
 const post = Astro.props;
 const { Content, headings } = await render(post);
+
+// Only reserve the right-hand TOC column when there are headings; otherwise
+// the article centers on the page instead of hugging the left.
+const hasToc = headings.length > 0;
 ---
 
 <Layout title={post.data.title} description={post.data.description}>
-  <div class="mx-auto w-full max-w-5xl px-4">
+  <div class="mx-auto w-full max-w-6xl px-4">
     <div class="animate">
       <BackToPrevious href="/blog">返回</BackToPrevious>
     </div>
 
-    <div class="mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-14">
+    <div class:list={["mt-10", hasToc && "lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-16"]}>
       <div class="mx-auto w-full max-w-[42rem]">
         <div class="space-y-1">
           <div class="animate flex items-center gap-1.5">
@@ -94,16 +97,13 @@ const { Content, headings } = await render(post);
           <div class="mt-24">
             <PostNavigation prevPost={prevPost} nextPost={nextPost} />
           </div>
-          <div class="mt-24">
-            <Giscus />
-          </div>
         </article>
       </div>
 
       {
-        headings.length > 0 && (
+        hasToc && (
           <aside class="animate mt-12 hidden lg:mt-0 lg:block">
-            <div class="sticky top-28">
+            <div class="sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto overscroll-contain pr-2 [scrollbar-width:thin]">
               <TableOfContents headings={headings} />
             </div>
           </aside>

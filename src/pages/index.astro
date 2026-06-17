@@ -12,18 +12,24 @@ const blog = (await getCollection("blog"))
   .slice(0, SITE.NUM_POSTS_ON_HOMEPAGE);
 ---
 
-<Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+<Layout title="" description={HOME.DESCRIPTION}>
   <Container>
-    <aside data-pagefind-ignore class="mx-auto max-w-2xl text-center">
+    <aside data-pagefind-ignore class="mx-auto max-w-3xl text-center">
       <div class="space-y-20">
-        <header class="space-y-4">
-          <h1 class="text-3xl font-semibold text-black sm:text-4xl dark:text-white">
-            喫茶去
-          </h1>
-          <p class="leading-relaxed text-black/70 dark:text-white/70">
-            「喫茶去」是赵州和尚的三字公案。此处存放读书、佛学、日本史与音乐的随记。
-          </p>
-        </header>
+        <div>
+          <h1 class="sr-only">喫茶去</h1>
+          <figure class="m-0">
+            <blockquote
+              class="m-0 p-0 font-charter text-[clamp(1.05rem,0.7rem+1.6vw,2rem)] italic leading-snug text-balance text-black dark:text-white"
+            >
+              Was it a vision, or a waking dream?<br />
+              Fled is that music:—Do I wake or sleep?
+            </blockquote>
+            <figcaption class="mt-6 font-charter text-sm text-black/75 dark:text-white/60">
+              — John Keats
+            </figcaption>
+          </figure>
+        </div>
 
         <section class="animate space-y-10">
           <h2 class="font-semibold text-black dark:text-white">近期文章</h2>
