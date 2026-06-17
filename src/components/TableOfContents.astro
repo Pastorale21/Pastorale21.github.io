@@ -1,0 +1,48 @@
+---
+import TableOfContentsHeading from "./TableOfContentsHeading.astro";
+
+// https://kld.dev/building-table-of-contents/
+const { headings } = Astro.props;
+const toc = buildToc(headings);
+
+export interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+function buildToc(headings: Heading[]) {
+  const toc: any[] = [];
+  const stack: any[] = [];
+  headings.forEach((h) => {
+    const heading = { ...h, subheadings: [] };
+    // Nest under the nearest preceding heading of a shallower depth.
+    // Robust to documents that start at any depth (h1/h3/…) or skip levels.
+    while (stack.length > 0 && stack[stack.length - 1].depth >= heading.depth) {
+      stack.pop();
+    }
+    if (stack.length === 0) {
+      toc.push(heading);
+    } else {
+      stack[stack.length - 1].subheadings.push(heading);
+    }
+    stack.push(heading);
+  });
+  return toc;
+}
+---
+
+<details
+  open
+  class="animate group rounded-lg border border-black/15 dark:border-white/20"
+>
+  <summary
+    class="cursor-pointer rounded-t-lg px-3 py-1.5 font-medium transition-colors group-open:bg-black/5 hover:bg-black/5 dark:group-open:bg-white/5 hover:dark:bg-white/5"
+    >Table of Contents</summary
+  >
+  <nav>
+    <ul class="py-3">
+      {toc.map((heading) => <TableOfContentsHeading heading={heading} />)}
+    </ul>
+  </nav>
+</details>
