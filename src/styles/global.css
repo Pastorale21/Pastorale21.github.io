@@ -11,20 +11,20 @@
   --font-mono: Geist Mono, ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-  /* 喫茶去 palette — warm paper + ink, muted clay/茶 accent.
-     Overriding the base tokens warms text, borders and surfaces site-wide. */
-  --color-black: oklch(18% 0.012 50); /* warm ink: text, borders, hovers */
-  --color-white: oklch(96.5% 0.008 85); /* warm off-white: dark-mode ink */
-  --color-neutral-100: oklch(97% 0.011 85); /* paper: light surface */
-  --color-neutral-900: oklch(19% 0.012 70); /* night: dark surface */
+  /* 喫茶去 palette — matched to Maggie Appleton's: cream ground + soft warm
+     charcoal text (not near-black, so it never reads heavy), warm coral accent. */
+  --color-black: oklch(38% 0.004 90); /* #353534 soft warm charcoal: text */
+  --color-white: oklch(94% 0.008 92); /* warm off-white: dark-mode text */
+  --color-neutral-100: oklch(96.8% 0.005 95); /* #f6f5f1 cream: light surface */
+  --color-neutral-900: oklch(20% 0.013 68); /* warm charcoal: dark surface */
 }
 
-/* Clay / 茶 accent, switched per theme. */
+/* Warm coral accent (Maggie's salmon family; echoes the logo's dango). */
 :root {
-  --accent: oklch(47% 0.105 42);
+  --accent: oklch(49% 0.155 33);
 }
 .dark {
-  --accent: oklch(73% 0.085 62);
+  --accent: oklch(72% 0.13 35);
 }
 
 /*
@@ -65,12 +65,12 @@
     @apply font-sans antialiased;
     @apply flex flex-col;
     @apply bg-neutral-100 dark:bg-neutral-900;
-    @apply text-black/75 dark:text-white/75;
+    @apply text-black dark:text-white;
   }
 
   header {
     @apply fixed left-0 right-0 top-0 z-50 py-6;
-    @apply bg-neutral-100/75 dark:bg-neutral-900/75;
+    @apply bg-neutral-100/80 dark:bg-neutral-900/80;
     @apply saturate-200 backdrop-blur-xs;
   }
 
@@ -95,7 +95,7 @@
   article a {
     @apply font-sans text-current underline underline-offset-[3px];
     @apply transition-colors duration-300 ease-in-out;
-    text-decoration-color: color-mix(in oklab, var(--accent) 45%, transparent);
+    text-decoration-color: color-mix(in oklab, var(--accent) 50%, transparent);
   }
   article a:hover {
     color: var(--accent);
@@ -126,8 +126,8 @@ pre {
 }
 
 :root {
-  --astro-code-foreground: oklch(25% 0.012 50);
-  --astro-code-background: oklch(95% 0.012 85);
+  --astro-code-foreground: oklch(40% 0.004 90);
+  --astro-code-background: oklch(95% 0.006 95);
   --astro-code-token-comment: #a19595;
   --astro-code-token-keyword: #f47067;
   --astro-code-token-string: #00a99a;
@@ -140,8 +140,8 @@ pre {
 }
 
 .dark {
-  --astro-code-foreground: oklch(90% 0.008 85);
-  --astro-code-background: oklch(16% 0.012 70);
+  --astro-code-foreground: oklch(90% 0.01 92);
+  --astro-code-background: oklch(17% 0.013 68);
   --astro-code-token-comment: #a19595;
   --astro-code-token-keyword: #f47067;
   --astro-code-token-string: #00a99a;
