@@ -1,11 +1,10 @@
 ---
-import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
 ---
 
 <header transition:persist>
-  <Container>
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
     <div class="flex flex-wrap justify-between gap-y-2">
       <Link href="/" underline={false}>
         <div class="flex items-center gap-2 font-semibold">
@@ -45,5 +44,5 @@ import { SITE } from "@consts";
         </button>
       </nav>
     </div>
-  </Container>
+  </div>
 </header>
