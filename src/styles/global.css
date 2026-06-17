@@ -5,11 +5,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Charter', 'Bitstream Charter', Cambria, Georgia, 'PingFang SC',
+  /* Fonts from amm10090/claude-warm-obsidian-theme:
+     text -> ui-serif, Georgia, Cambria, "Times New Roman", serif
+     monospace -> "SFMono-Regular", Consolas, "Liberation Mono", monospace
+     (CJK + emoji fallbacks kept so Chinese text still renders) */
+  --font-sans: ui-serif, Georgia, Cambria, 'Times New Roman', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', 'Source Han Sans SC', serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-mono: Geist Mono, ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
   /* 喫茶去 palette — matched to Maggie Appleton's: cream ground + soft warm
      charcoal text (not near-black, so it never reads heavy), warm coral accent. */
