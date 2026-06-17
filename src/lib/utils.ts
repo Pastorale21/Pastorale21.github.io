@@ -19,3 +19,13 @@ export function readingTime(html: string) {
   const readingTimeMinutes = (wordCount / 200 + 1).toFixed();
   return `${readingTimeMinutes} min read`;
 }
+
+export function getFirstImage(body: string): string | undefined {
+  // Posts reference images inline as <img src="/images/…">; fall back to
+  // markdown ![](…) syntax. Returns the first match's URL, or undefined.
+  const html = body.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (html) return html[1];
+  const md = body.match(/!\[[^\]]*\]\(([^)\s]+)/);
+  if (md) return md[1];
+  return undefined;
+}

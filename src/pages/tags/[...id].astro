@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
-import ArrowCard from "@components/ArrowCard.astro";
+import PostListItem from "@components/PostListItem.astro";
 import BackToPrevious from "@components/BackToPrevious.astro";
 
 export async function getStaticPaths() {
@@ -36,8 +36,8 @@ const sortedPosts = posts.sort(
       <h1 class="animate font-semibold text-black dark:text-white">
         Posts tagged with "{id}"
       </h1>
-      <ul class="animate flex flex-col gap-4">
-        {sortedPosts.map((post) => <ArrowCard entry={post} />)}
+      <ul class="animate space-y-10">
+        {sortedPosts.map((post) => <PostListItem entry={post} />)}
       </ul>
     </div>
   </Container>
