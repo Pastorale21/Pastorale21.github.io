@@ -10,7 +10,36 @@
 import { works } from './tea-works.js';
 ---
 <section class="tea">
-  <div class="tea-seal" id="tea-seal" role="button" tabindex="0" aria-label="喫茶——斟一首作品">茶</div>
+  <!-- SVG filters for the seal: ts-erode roughens the stamp's edge; ts-brush
+       gives the carved 汤吞 its hand-cut wobble. Defined once, off-layout. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="ts-erode" x="-18%" y="-18%" width="136%" height="136%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="ts-brush" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.07 0.09" numOctaves="2" seed="4" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="2.6"/>
+    </filter>
+  </svg>
+  <div class="tea-seal" id="tea-seal" role="button" tabindex="0" aria-label="喫茶——斟一首作品">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <g filter="url(#ts-brush)" fill="none" stroke="currentColor"
+         stroke-linecap="round" stroke-linejoin="round">
+        <!-- 热气：三缕错落 S 形 -->
+        <g stroke-width="3.6">
+          <path d="M40 29 C36 25 44 22 40 18 C38 16 42 16 42 15"/>
+          <path d="M50 29 C46 24 55 20 50 14 C47 10 53 9 53 5"/>
+          <path d="M60 29 C64 25 56 21 60 17 C62 14 60 12 61 10"/>
+        </g>
+        <!-- 杯身（含圈足）≈1.2:1 -->
+        <path stroke-width="6" d="M31 37 34 73 41 73 41 79 59 79 59 73 67 73 70 37"/>
+        <!-- 外翻薄唇 -->
+        <path stroke-width="4.5" d="M28 36C39 33 61 33 72 36 61 39 39 39 28 36Z"/>
+      </g>
+    </svg>
+    <span class="ring"></span>
+  </div>
   <div class="tea-invite" id="tea-invite">喝一杯</div>
   <div class="tea-cup"><div class="tea-work" id="tea-work" aria-live="polite"></div></div>
   <button class="tea-again" id="tea-again" type="button">再来一杯 ↻</button>
@@ -22,19 +51,26 @@ import { works } from './tea-works.js';
      强调色）。类名均带 tea- 前缀，不会污染全局。 -->
 <style is:global>
   .tea { text-align: center; padding: 1rem 0 2.4rem; }
+  /* 白文方印 — terracotta stamp with the 汤吞 carved out as negative space.
+     background = the accent ink; the SVG strokes use currentColor = the page
+     surface, so the carving shows the paper through and tracks light/dark.
+     filter:url(#ts-erode) roughens the printed edge. */
   .tea-seal {
-    width: 3.4rem; height: 3.4rem; border-radius: 999px; margin: 0 auto;
-    display: grid; place-items: center; cursor: pointer; position: relative;
-    border: 1.5px solid var(--accent, #b1462f); color: var(--accent, #b1462f);
-    font-family: var(--font-display, Georgia, serif); font-size: 1.5rem; background: transparent;
-    transition: background .35s ease, transform .25s cubic-bezier(.2,.7,.3,1.4); user-select: none; outline: none;
+    width: 5.2rem; height: 5.2rem; margin: 0 auto; border-radius: 22%;
+    display: grid; place-items: center; position: relative;
+    background: var(--color-seal, #b1462f);
+    color: var(--surface-page, #f6f5f1);
+    filter: url(#ts-erode);
+    cursor: pointer; user-select: none; outline: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .25s cubic-bezier(.2,.7,.3,1.4);
   }
-  .tea-seal:hover { background: color-mix(in oklab, var(--accent, #b1462f) 8%, transparent); }
-  .tea-seal:active { transform: scale(.92); }
-  .tea-seal:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent, #b1462f) 22%, transparent); }
-  .tea-seal::after { content: ""; position: absolute; inset: -6px; border-radius: 999px; border: 1px solid var(--accent, #b1462f); opacity: 0; transform: scale(.8); pointer-events: none; }
-  .tea-seal.is-pour::after { animation: teaRipple .7s ease-out; }
-  @keyframes teaRipple { 0% { opacity:.5; transform:scale(.85);} 100% { opacity:0; transform:scale(1.5);} }
+  .tea-seal:active { transform: scale(.93); }
+  .tea-seal:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent, #b1462f) 32%, transparent); }
+  .tea-seal svg { display: block; width: 58%; height: 58%; }
+  .tea-seal .ring { position: absolute; inset: -8px; border-radius: 24%; border: 1px solid var(--accent, #b1462f); opacity: 0; transform: scale(.8); pointer-events: none; }
+  .tea-seal.is-pour .ring { animation: ts-ripple .7s ease-out; }
+  @keyframes ts-ripple { 0% { opacity:.5; transform:scale(.85);} 100% { opacity:0; transform:scale(1.6);} }
 
   .tea-invite { margin-top: 1.05rem; font-size: .75rem; letter-spacing: .14em; color: var(--text-quiet, #6b6a64); }
   .tea-cup { min-height: 9rem; margin-top: 1.6rem; display: grid; place-items: center; }
@@ -59,7 +95,7 @@ import { works } from './tea-works.js';
   @keyframes teaInkIn { from { opacity:0; transform:translateY(8px); filter:blur(6px);} to { opacity:1; transform:none; filter:blur(0);} }
   @keyframes teaInkOut { from { opacity:1; filter:blur(0);} to { opacity:0; transform:translateY(-8px); filter:blur(4px);} }
   @media (prefers-reduced-motion: reduce) {
-    .tea-ink-in, .tea-ink-out, .tea-seal.is-pour::after { animation: none !important; }
+    .tea-ink-in, .tea-ink-out, .tea-seal.is-pour .ring { animation: none !important; }
     .tea-ink-out { opacity: 1; }
   }
 </style>

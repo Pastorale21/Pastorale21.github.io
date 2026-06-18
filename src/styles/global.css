@@ -51,6 +51,10 @@
   --color-neutral-100: oklch(96.8% 0.005 95); /* #f6f5f1 cream: light surface */
   --color-neutral-900: oklch(24% 0.016 72); /* warm charcoal: dark surface
     (lifted off near-black + a touch warmer, like ink on dark paper) */
+
+  /* 茶印印底专用——比 accent 提亮一档，块面填充时更透气，不发暗。--accent 保持
+     不变（交互/强调语义）；深色模式在 .dark 里另给中明度值，见下。 */
+  --color-seal: oklch(58% 0.145 33);
 }
 
 /* Warm coral accent (Maggie's salmon family; echoes the logo's dango). */
@@ -66,9 +70,16 @@
   --text-strong: var(--color-black);
   --text-quiet: color-mix(in oklab, var(--color-black) 70%, var(--color-neutral-100));
   --text-muted: color-mix(in oklab, var(--color-black) 82%, var(--color-neutral-100));
+  /* Hairline divider — the masthead's bottom edge sits black at ~10% over the
+     cream ground (matches the article img border). */
+  --border-hairline: color-mix(in oklab, var(--color-black) 10%, transparent);
 }
 .dark {
   --accent: oklch(72% 0.13 35);
+  /* Hold the seal at a stable mid-lightness terracotta — do NOT track --accent's
+     dark brightening, or the reverse-out 汤吞 loses contrast on the fill. */
+  --color-seal: oklch(56% 0.14 33);
+  --border-hairline: color-mix(in oklab, var(--color-white) 10%, transparent);
   --surface-page: var(--color-neutral-900);
   --text-strong: var(--color-white);
   --text-quiet: color-mix(in oklab, var(--color-white) 65%, var(--color-neutral-900));
@@ -166,7 +177,9 @@
   header {
     @apply fixed left-0 right-0 top-0 z-50 py-6;
     @apply bg-neutral-100/80 dark:bg-neutral-900/85;
-    @apply saturate-200 backdrop-blur-xs;
+    @apply backdrop-blur-md saturate-[1.15];
+    @apply [mask-image:linear-gradient(to_bottom,#000_70%,transparent)];
+    @apply shadow-[0_1px_0_var(--border-hairline)];
     font-family: var(--font-display);
     font-synthesis: none;
   }
