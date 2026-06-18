@@ -5,12 +5,20 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Fonts from amm10090/claude-warm-obsidian-theme:
-     text -> ui-serif, Georgia, Cambria, "Times New Roman", serif
-     monospace -> "SFMono-Regular", Consolas, "Liberation Mono", monospace
-     (CJK + emoji fallbacks kept so Chinese text still renders) */
-  --font-sans: ui-serif, Georgia, Cambria, 'Times New Roman', 'Noto Serif SC',
-    'Source Han Serif SC', 'Songti SC', 'STSong', 'SimSun', serif,
+  /* Body font. Originally amm10090/claude-warm-obsidian-theme's Latin-first
+     stack (ui-serif, Georgia, Cambria, "Times New Roman", serif), but the
+     CJK webfont MUST lead, or iOS Safari never reaches it: when a generic
+     family (ui-serif / serif) sits ahead of the webfont and lacks a Han glyph,
+     Safari resolves that glyph with its own system CJK fallback (Songti /
+     PingFang) and stops — it never falls through to 'Noto Serif SC', and it
+     won't even fetch the matching subset. unicode-range gates which subset of
+     a family downloads; it does NOT change family priority. So 思源宋体 leads
+     for Han. This build carries no basic-Latin subset, so Latin/digits find no
+     Noto glyph and still fall through to ui-serif / Georgia — Latin is
+     unchanged; only Han text flips from system Songti to Noto Serif SC.
+     monospace -> "SFMono-Regular", Consolas, "Liberation Mono", monospace */
+  --font-sans: 'Noto Serif SC', 'Source Han Serif SC', ui-serif, Georgia,
+    Cambria, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
@@ -156,25 +164,43 @@
 }
 
 /*
-  Reveal-on-load enhances an already-visible default. Content is visible
-  unconditionally; the hide-then-reveal applies ONLY when JS is active
-  (html.js is set synchronously before paint in Head.astro) AND the user
-  hasn't asked to reduce motion. So a JS failure, a headless render, or a
-  reduced-motion preference all fall back to fully visible content — the
-  primary feed never ships blank.
+  Reveal-on-load is a pure-CSS animation, so it can never strand content. The
+  keyframe plays automatically the moment html.js is present (set synchronously
+  before paint in Head.astro) — no DOMContentLoaded handler, no setTimeout, no
+  IntersectionObserver, so there is nothing left to error mid-init or be
+  throttled in a background tab (the old JS `.show` toggle could leave content
+  at opacity:0 if init() threw or the timer never fired). The resting state IS
+  the element's natural, visible state: animation-fill-mode:both holds the
+  hidden `from` only during any stagger delay, then settles to fully visible —
+  so even a dropped frame ends visible. Without JS, html.js is never set and the
+  content simply shows instantly, unanimated; reduced-motion users get the same.
 */
 @media (prefers-reduced-motion: no-preference) {
   html.js .animate {
-    opacity: 0;
-    transform: translateY(-0.75rem);
-    transition:
-      opacity 0.3s ease-out,
-      transform 0.3s ease-out;
+    animation: reveal-up 0.45s ease-out both;
   }
 
-  html.js .animate.show {
-    opacity: 1;
-    transform: translateY(0);
+  /* A gentle document-order cascade for sibling groups (home feed sections,
+     archive months, post-header rows). Non-sibling .animate elements share the
+     base timing — calmer, and never blank. */
+  html.js .animate:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  html.js .animate:nth-child(3) {
+    animation-delay: 0.12s;
+  }
+  html.js .animate:nth-child(4) {
+    animation-delay: 0.18s;
+  }
+  html.js .animate:nth-child(n + 5) {
+    animation-delay: 0.24s;
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(-0.75rem);
+    }
   }
 }
 

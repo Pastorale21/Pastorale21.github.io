@@ -26,7 +26,7 @@ const coverUrl = !showCover || cover ? undefined : getFirstImage(entry.body ?? "
 // compact left-aligned index (archive, tags). Hierarchy is carried by size +
 // color + tracking, since the serif only renders at weights 400 / 700.
 const rootClass = centered
-  ? "not-prose group mx-auto block text-center"
+  ? "not-prose group mx-auto block max-w-xl text-center"
   : "not-prose group block";
 const dateClass = centered
   ? "text-xs tracking-wide text-black/75 dark:text-white/60"

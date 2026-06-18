@@ -70,7 +70,6 @@ const { title, description, image } = Astro.props;
   function init() {
     preloadTheme();
     onScroll();
-    animate();
     updateThemeButtons();
     addCopyCodeButtons();
 
@@ -139,16 +138,6 @@ const { title, description, image } = Astro.props;
     } else {
       addActiveButtonTheme(systemThemeButton);
     }
-  }
-
-  function animate() {
-    const animateElements = document.querySelectorAll(".animate");
-
-    animateElements.forEach((element, index) => {
-      setTimeout(() => {
-        element.classList.add("show");
-      }, index * 100);
-    });
   }
 
   function onScroll() {

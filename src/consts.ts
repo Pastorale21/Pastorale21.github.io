@@ -4,7 +4,7 @@ export const SITE: Site = {
   TITLE: "喫茶去",
   DESCRIPTION: "Pastorale's blog",
   EMAIL: "harry31031802@gmail.com",
-  NUM_POSTS_ON_HOMEPAGE: 9,
+  NUM_POSTS_ON_HOMEPAGE: 5,
   NUM_PROJECTS_ON_HOMEPAGE: 3,
 };
 
