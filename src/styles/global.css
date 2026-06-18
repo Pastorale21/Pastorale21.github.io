@@ -51,9 +51,19 @@
 /* Warm coral accent (Maggie's salmon family; echoes the logo's dango). */
 :root {
   --accent: oklch(49% 0.155 33);
+  /* Bridge tokens for components authored against a generic design system
+     (EntranceEpigraph's splash): map its --surface-page / --text-strong /
+     --text-quiet onto the 喫茶去 palette so the splash tracks light/dark
+     instead of falling back to its hardcoded light defaults. */
+  --surface-page: var(--color-neutral-100);
+  --text-strong: var(--color-black);
+  --text-quiet: color-mix(in oklab, var(--color-black) 70%, var(--color-neutral-100));
 }
 .dark {
   --accent: oklch(72% 0.13 35);
+  --surface-page: var(--color-neutral-900);
+  --text-strong: var(--color-white);
+  --text-quiet: color-mix(in oklab, var(--color-white) 65%, var(--color-neutral-900));
 }
 
 /* 京华老宋体 — subset to the header glyphs only (~8KB). Single master, so the

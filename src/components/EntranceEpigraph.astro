@@ -1,0 +1,85 @@
+---
+// EntranceEpigraph.astro — 进站「屏保」题词，墨迹显影进场 / 如梦消散退场。
+// 用法：放在 Layout 的 <body> 顶部（首页 only），引文内容写在 slot 默认值里。
+// 字体：在全局 <head> 引入 IM Fell English（已在设计系统 tokens/fonts.css 内）。
+---
+<div class="kissako-splash" id="kissako-splash" role="dialog" aria-label="入场题词">
+  <div class="epi">
+    <p class="q"><span class="cap">W</span><span class="rest">as it a vision, or a waking dream? Fled is that music:—Do I wake or sleep?</span></p>
+    <span class="by">— John Keats</span>
+  </div>
+  <div class="skip">轻触任意处跳过</div>
+</div>
+
+<!-- Without JS the splash never gets dismissed (its script does that), so it
+     would cover the page forever. Hide it when scripting is off. -->
+<noscript><style is:inline>.kissako-splash{display:none}</style></noscript>
+
+<style>
+  .kissako-splash {
+    position: fixed; inset: 0; z-index: 50;
+    background: var(--surface-page, #f6f5f1);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .kissako-splash.out {
+    opacity: 0; filter: blur(4px); transform: translateY(-14px); visibility: hidden;
+    transition: opacity 1s ease, filter 1s ease, transform 1s ease, visibility 1s ease;
+  }
+  .epi {
+    max-width: 24rem; padding: 1.5rem;
+    font-family: var(--font-charter, "IM Fell English", Georgia, serif);
+    font-style: italic; color: var(--text-strong, #353534);
+  }
+  .epi .q { font-size: 1.7rem; line-height: 1.5; text-wrap: balance; }
+  .cap {
+    font-size: 4rem; line-height: .8; float: left; padding: .12em .1em 0 0;
+    color: var(--accent, #b1462f); font-style: italic;
+    opacity: 0; transform: scale(1.22) translateY(2px); filter: blur(7px);
+  }
+  .rest { display: inline; opacity: 0; transform: translateY(9px); filter: blur(6px); }
+  .by {
+    display: block; text-align: right; margin-top: 1.15rem; font-size: 1rem;
+    color: var(--text-quiet, #6b6a64); opacity: 0; transform: translateY(6px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .kissako-splash.in .cap  { animation: kkCap 1s cubic-bezier(.2,.6,.3,1) forwards; }
+    .kissako-splash.in .rest { animation: kkText 1.05s cubic-bezier(.2,.6,.3,1) .34s forwards; }
+    .kissako-splash.in .by   { animation: kkBy .7s ease 1.1s forwards; }
+  }
+  @keyframes kkCap  { to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } }
+  @keyframes kkText { to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+  @keyframes kkBy   { to { opacity: 1; transform: translateY(0); } }
+  .skip {
+    position: fixed; left: 0; right: 0; bottom: 2rem; text-align: center;
+    font-size: .75rem; letter-spacing: .14em; color: var(--text-quiet, #6b6a64);
+    opacity: 0; transition: opacity .6s ease 1.5s;
+  }
+  .kissako-splash.in .skip { opacity: .55; }
+  @media (prefers-reduced-motion: reduce) { .kissako-splash { display: none; } }
+</style>
+
+<script is:inline>
+  (function () {
+    var splash = document.getElementById('kissako-splash');
+    if (!splash) return;
+    var ENTRANCE = 1100, HOLD = 1800;   // ← 调这里改停留时长（ms）
+    var t = null;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function dismiss() { if (t) { clearTimeout(t); t = null; } splash.classList.add('out'); document.body.style.overflow = ''; }
+    function play() {
+      if (reduced) return;
+      splash.classList.remove('out'); void splash.offsetWidth; splash.classList.add('in');
+      document.body.style.overflow = 'hidden';
+      t = setTimeout(dismiss, ENTRANCE + HOLD);
+    }
+    var seen = false;
+    try { seen = sessionStorage.getItem('kissako_splash') === '1'; } catch (e) {}
+    if (seen || reduced) { splash.classList.add('out'); }
+    else { play(); try { sessionStorage.setItem('kissako_splash', '1'); } catch (e) {} }
+
+    splash.addEventListener('click', dismiss);
+    window.addEventListener('keydown', function () { if (!splash.classList.contains('out')) dismiss(); });
+    window.addEventListener('wheel', function () { if (!splash.classList.contains('out')) dismiss(); }, { passive: true });
+  })();
+</script>

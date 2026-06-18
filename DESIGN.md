@@ -170,7 +170,7 @@ A single search field, surfaced in the overlay (Pagefind).
 ### Signature Component: the borderless post entry
 The post list entry (`PostListItem`) is the heart of the system. It is always borderless: a **date**, the **title** (serif 400, shifting to Terracotta Coral on hover), an optional **cover image** (auto-extracted from the post's first body image, capped at `max-w-sm`, `3/2` aspect, `0.375rem` radius, 1px border), then a two-line **excerpt** (`text-sm`, Ink `/80`, clamped). It ships in two treatments, switched by a `centered` prop:
 
-- **Featured feed (home page, `centered`):** centered and constrained to a `max-w-xl` measure, separated by `3.5rem` of whitespace. The date is a quiet kicker (`text-xs`, tracked, Ink `/75`), the title is the focal point (`text-2xl`, regular, balanced wrapping), the cover is centered. Spacious and curated.
+- **Featured feed (home page, `centered`):** centered in the home's wider `max-w-4xl` column so the focal title (`text-2xl`, regular) sits on one line rather than wrapping; the excerpt is held back to a `max-w-xl` reading measure so multi-line Chinese stays calm, and items are separated by `3.5rem` of whitespace. The date is a quiet kicker (`text-xs`, tracked, Ink `/75`), the cover is centered. Spacious and curated.
 - **Compact index (archive, tags):** left-aligned, separated by `2.5rem`. The date is `text-sm` Ink `/75`, the title is `text-lg`. Built to scan a long list.
 
 Hierarchy here is carried by **size and whitespace**, not by fading text toward the background. The title is full-ink; the excerpt and date step down in size, not into illegibility (every tier clears the Contrast Floor below).
