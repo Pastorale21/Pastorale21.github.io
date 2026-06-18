@@ -32,11 +32,16 @@
   --font-display: 'King Hwa Old Song', ui-serif, Georgia, Cambria,
     'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
 
-  /* Charter (Matthew Carter's transitional serif), self-hosted via the
-     charter-webfont import in Head.astro. Reserved for the Latin title-page
-     epigraph on the home page, where its printed-book voice outclasses the
-     Georgia fallback. Not used for CJK (Charter ships no Han glyphs). */
-  --font-charter: 'Charter', Georgia, ui-serif, Cambria, serif;
+  /* IM Fell English (Igino Marini's digitization of the 17th-c Oxford "Fell"
+     types) — the Latin title-page voice: swash caps, decorative ligatures, and
+     oldstyle figures (in step with the body's oldstyle-nums). Drives the home
+     epigraph (EntranceEpigraph) and the tea-seal work card's album-name +
+     performer italics. Loaded from Google Fonts in Head.astro (self-host later
+     to match the otherwise all-self-hosted stack). Charter is the local
+     fallback; Noto Serif SC / Songti catch any CJK in the performer line, since
+     IM Fell — like Charter — ships no Han glyphs. */
+  --font-charter: 'IM Fell English', 'Charter', Georgia, ui-serif, Cambria,
+    'Noto Serif SC', 'Songti SC', serif;
 
   /* 喫茶去 palette — matched to Maggie Appleton's: cream ground + soft warm
      charcoal text (not near-black, so it never reads heavy), warm coral accent. */

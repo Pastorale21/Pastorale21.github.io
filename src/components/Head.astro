@@ -42,6 +42,18 @@ const { title, description, image } = Astro.props;
 <link rel="icon" type="image/jpeg" href="/logo.jpg" />
 <meta name="generator" content={Astro.generator} />
 
+<!-- Fonts: IM Fell English (Igino Marini's digitization of the 17th-c Oxford
+     "Fell" types) is the Latin title-page voice — it drives --font-charter (the
+     home epigraph + the tea-seal work card's album/performer italics). Loaded
+     from Google Fonts for now to verify; self-host the regular+italic woff2
+     from google-webfonts-helper later to match the rest of the self-hosted
+     stack. preconnect first so the swap fires early. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap"
+  rel="stylesheet"
+/>
+
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
