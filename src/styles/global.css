@@ -30,9 +30,11 @@
   /* 喫茶去 palette — matched to Maggie Appleton's: cream ground + soft warm
      charcoal text (not near-black, so it never reads heavy), warm coral accent. */
   --color-black: oklch(38% 0.004 90); /* #353534 soft warm charcoal: text */
-  --color-white: oklch(94% 0.008 92); /* warm off-white: dark-mode text */
+  --color-white: oklch(90% 0.01 88); /* warm off-white: dark-mode text (softened
+    from pure white so it doesn't glare on the dark ground) */
   --color-neutral-100: oklch(96.8% 0.005 95); /* #f6f5f1 cream: light surface */
-  --color-neutral-900: oklch(20% 0.013 68); /* warm charcoal: dark surface */
+  --color-neutral-900: oklch(24% 0.016 72); /* warm charcoal: dark surface
+    (lifted off near-black + a touch warmer, like ink on dark paper) */
 }
 
 /* Warm coral accent (Maggie's salmon family; echoes the logo's dango). */
@@ -96,10 +98,17 @@
 
   header {
     @apply fixed left-0 right-0 top-0 z-50 py-6;
-    @apply bg-neutral-100/80 dark:bg-neutral-900/80;
+    @apply bg-neutral-100/80 dark:bg-neutral-900/85;
     @apply saturate-200 backdrop-blur-xs;
     font-family: var(--font-display);
     font-synthesis: none;
+  }
+
+  /* In dark mode the saturate-200 over the blurred backdrop turns the top edge
+     into a muddy brown/green halo. Drop the boost and use a more opaque ground
+     so the masthead reads as a clean band, not a tinted glow. */
+  .dark header {
+    @apply saturate-100;
   }
 
   main {
@@ -198,7 +207,7 @@ pre {
 
 .dark {
   --astro-code-foreground: oklch(90% 0.01 92);
-  --astro-code-background: oklch(17% 0.013 68);
+  --astro-code-background: oklch(20% 0.015 72);
   --astro-code-token-comment: #a19595;
   --astro-code-token-keyword: #f47067;
   --astro-code-token-string: #00a99a;

@@ -15,22 +15,32 @@ const blog = (await getCollection("blog"))
 <Layout title="" description={HOME.DESCRIPTION}>
   <Container>
     <aside data-pagefind-ignore class="mx-auto max-w-3xl text-center">
-      <div class="space-y-20">
-        <div>
-          <h1 class="sr-only">喫茶去</h1>
-          <figure class="m-0">
-            <blockquote
-              class="m-0 p-0 font-charter text-[clamp(1.05rem,0.7rem+1.6vw,2rem)] italic leading-snug text-balance text-black dark:text-white"
-            >
-              Was it a vision, or a waking dream?<br />
-              Fled is that music:—Do I wake or sleep?
-            </blockquote>
-            <figcaption class="mt-6 font-charter text-sm text-black/75 dark:text-white/60">
-              — John Keats
-            </figcaption>
-          </figure>
-        </div>
+      <div>
+        <h1 class="sr-only">喫茶去</h1>
+        <figure class="m-0">
+          <blockquote
+            class="m-0 p-0 font-charter text-[clamp(1.05rem,0.7rem+1.6vw,2rem)] italic leading-snug text-balance text-black dark:text-white"
+          >
+            Was it a vision, or a waking dream?<br />
+            Fled is that music:—Do I wake or sleep?
+          </blockquote>
+          <figcaption class="mt-6 font-charter text-sm text-black/75 dark:text-white/60">
+            — John Keats
+          </figcaption>
+        </figure>
+      </div>
 
+      <!-- Dinkus: the printed-book mark that turns the title page into the
+           reading room below. Carries the fold's generous, fluid breathing
+           room so the epigraph reads as its own opening, not another block. -->
+      <div
+        aria-hidden="true"
+        class="my-[clamp(2.5rem,1.8rem+2.5vw,4rem)] select-none text-2xl leading-none text-black/40 dark:text-white/40"
+      >
+        ⁂
+      </div>
+
+      <div class="space-y-20">
         <section class="animate space-y-10">
           <h2 class="font-semibold text-black dark:text-white">近期文章</h2>
           <ul class="not-prose space-y-16">

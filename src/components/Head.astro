@@ -4,10 +4,16 @@ import { ClientRouter } from "astro:transitions";
 
 import "charter-webfont/charter.css";
 
-// Noto Serif SC (思源宋体) — screen-optimized Chinese serif. Only the
-// chinese-simplified subset is imported (Latin uses Georgia/ui-serif first).
-import "@fontsource/noto-serif-sc/chinese-simplified-400.css";
-import "@fontsource/noto-serif-sc/chinese-simplified-700.css";
+// Noto Serif SC (思源宋体) — screen-optimized Chinese serif. Use the
+// unicode-range-split build (101 ~40KB chunks) rather than the single
+// chinese-simplified file (~1.4MB each). The big single file fails to render
+// on iOS Safari — mobile won't finish/keep a multi-MB download under swap, so
+// the body text falls back to system Songti/PingFang. The split build only
+// downloads the chunks whose glyphs are on the page, and its per-face
+// unicode-range pins CJK codepoints to this font directly instead of relying
+// on per-glyph fallback past Georgia/Times (where Safari diverges from Chrome).
+import "@fontsource/noto-serif-sc/400.css";
+import "@fontsource/noto-serif-sc/700.css";
 
 import "@fontsource/geist-mono/100.css";
 import "@fontsource/geist-mono/200.css";
