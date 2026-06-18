@@ -5,20 +5,23 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Body font. Originally amm10090/claude-warm-obsidian-theme's Latin-first
-     stack (ui-serif, Georgia, Cambria, "Times New Roman", serif), but the
-     CJK webfont MUST lead, or iOS Safari never reaches it: when a generic
-     family (ui-serif / serif) sits ahead of the webfont and lacks a Han glyph,
-     Safari resolves that glyph with its own system CJK fallback (Songti /
-     PingFang) and stops — it never falls through to 'Noto Serif SC', and it
-     won't even fetch the matching subset. unicode-range gates which subset of
-     a family downloads; it does NOT change family priority. So 思源宋体 leads
-     for Han. This build carries no basic-Latin subset, so Latin/digits find no
-     Noto glyph and still fall through to ui-serif / Georgia — Latin is
-     unchanged; only Han text flips from system Songti to Noto Serif SC.
+  /* Body font, ordered by script so each glyph lands in the right face:
+     1. 'Charter Text' — Charter (the epigraph's printed-book serif), scoped by
+        unicode-range to the Latin letter blocks ONLY (see its @font-face). So
+        Latin embedded in CJK prose — names, "BWV 78", IAST diacritics — reads
+        in Charter, not flat Georgia, while shared marks (— … "" ·) fall through
+        to Noto and keep their CJK forms.
+     2. 'Noto Serif SC' (思源宋体) — Han. It MUST sit ahead of any generic, or
+        iOS Safari resolves Han via its own system fallback (Songti / PingFang)
+        and stops before reaching the webfont — never even fetching the subset.
+        unicode-range gates which subset of a family downloads; it does NOT
+        change family priority, so the webfont has to lead its script.
+     3. ui-serif / Georgia / … — last-resort Latin if Charter fails to load;
+        Songti / SimSun — last-resort Han if Noto fails.
+     Originally amm10090/claude-warm-obsidian-theme's Latin-first stack.
      monospace -> "SFMono-Regular", Consolas, "Liberation Mono", monospace */
-  --font-sans: 'Noto Serif SC', 'Source Han Serif SC', ui-serif, Georgia,
-    Cambria, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', serif,
+  --font-sans: 'Charter Text', 'Noto Serif SC', 'Source Han Serif SC', ui-serif,
+    Georgia, Cambria, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
@@ -63,6 +66,40 @@
   font-display: swap;
 }
 
+/* 'Charter Text' — XCharter (Michael Sharpe's free extension of Matthew
+   Carter's Bitstream Charter), scoped to Latin so it carries Latin runs inside
+   CJK body prose (front of --font-sans) without ever touching Han. XCharter,
+   not plain Bitstream Charter, because it ships the OLDSTYLE figures this body
+   wants — the `onum` feature here remaps 0-9 to text figures (1 2 3 sit on the
+   baseline, 4 7 9 descend), turned on globally via `font-variant-numeric` on
+   body. Self-hosted from TeX Live's XCharter OTF, subset to the Latin blocks
+   and woff2 (~31KB/face), with `onum` retained.
+   The unicode-range covers the Latin letter blocks (Basic + Latin-1,
+   Extended-A/B, IPA schwa, Latin Extended Additional for IAST, Extended-C/D)
+   and DELIBERATELY omits U+2000-206F general punctuation, so em-dash, ellipsis,
+   curly quotes and the middle dot stay with Noto Serif SC in their full-width
+   CJK forms. No local(): a system "Charter" (lining figures) would otherwise
+   shadow the webfont and lose the oldstyle figures. The home epigraph keeps the
+   broader Bitstream 'Charter' family (italic) via --font-charter. */
+@font-face {
+  font-family: 'Charter Text';
+  src: url('/fonts/xcharter-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0100-024F, U+0259, U+1E00-1EFF, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Charter Text';
+  src: url('/fonts/xcharter-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0100-024F, U+0259, U+1E00-1EFF, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -102,6 +139,9 @@
     @apply flex flex-col;
     @apply bg-neutral-100 dark:bg-neutral-900;
     @apply text-black dark:text-white;
+    /* Charter's oldstyle (text) figures for all Latin digits — dates, BWV
+       numbers, counts. No-op on Noto/Geist Mono, which lack the onum feature. */
+    font-variant-numeric: oldstyle-nums;
   }
 
   header {
