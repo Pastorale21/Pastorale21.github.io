@@ -40,8 +40,12 @@ import { works } from './tea-works.js';
     </svg>
     <span class="ring"></span>
   </div>
-  <div class="tea-invite" id="tea-invite">喝一杯</div>
-  <div class="tea-cup"><div class="tea-work" id="tea-work" aria-live="polite"></div></div>
+  <div class="tea-cup">
+    <div class="tea-pour" id="tea-pour">
+      <div class="tea-work" id="tea-work" aria-live="polite"></div>
+      <div class="tea-invite" id="tea-invite">喝一杯</div>
+    </div>
+  </div>
   <button class="tea-again" id="tea-again" type="button">再来一杯 ↻</button>
 </section>
 
@@ -72,12 +76,13 @@ import { works } from './tea-works.js';
   .tea-seal.is-pour .ring { animation: ts-ripple .7s ease-out; }
   @keyframes ts-ripple { 0% { opacity:.5; transform:scale(.85);} 100% { opacity:0; transform:scale(1.6);} }
 
-  .tea-invite { margin-top: 1.05rem; font-size: .75rem; letter-spacing: .14em; color: var(--text-quiet, #6b6a64); }
-  .tea-cup { min-height: 9rem; margin-top: 1.6rem; display: grid; place-items: center; }
-  /* Before the first pour .tea-work is empty, so don't reserve the 9rem pour
-     area — this lifts 近期文章 up on initial load. Once a work is injected
-     (.tea-work no longer :empty) the cup returns to its reserved height. */
-  .tea-cup:has(.tea-work:empty) { min-height: 0; margin-top: 0; }
+  /* 「喝一杯」提示与作品叠放在同一格（.tea-pour > *），显隐走纯 opacity。点击
+     斟茶时由脚本把 .tea-pour 的高度从「提示态」缓动过渡到「作品态」（见 first-
+     pour 分支），近期文章随容器高度缓缓下移 —— 不瞬跳、不回弹、不二段跳。 */
+  .tea-invite { font-size: .75rem; letter-spacing: .14em; color: var(--text-quiet, #6b6a64); transition: opacity .35s ease; }
+  .tea-cup { margin-top: 1.3rem; }
+  .tea-pour { overflow: hidden; display: grid; justify-items: center; align-items: center; }
+  .tea-pour > * { grid-area: 1 / 1; }   /* 作品与提示叠放同格，高度动画作用于容器 */
   .tea-composer { font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-quiet, #6b6a64); }
   .tea-title { font-size: 1.55rem; line-height: 1.4; color: var(--text-strong, #353534); margin: .55rem auto .15rem; max-width: 100%; white-space: nowrap; font-family: var(--font-sans, Georgia, serif); }
   .tea-op { display: block; font-family: var(--font-charter, "IM Fell English", Georgia, serif); font-style: italic; font-size: 1rem; line-height: 1.35; color: var(--text-quiet, #6b6a64); margin: .15rem auto .1rem; max-width: 26rem; text-wrap: balance; }
@@ -102,21 +107,13 @@ import { works } from './tea-works.js';
 
 <script define:vars={{ works }}>
   (function () {
-    var seal = document.getElementById('tea-seal');
-    var invite = document.getElementById('tea-invite');
-    var workEl = document.getElementById('tea-work');
-    var again = document.getElementById('tea-again');
-    if (!seal) return;
-
+    // ── 跨视图过渡持久、只需初始化一次的部分 ───────────────────────────────
     var STORE = 'kissako_am_urls';
     var cache = {};
     try { cache = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) {}
     function saveCache() { try { localStorage.setItem(STORE, JSON.stringify(cache)); } catch (e) {} }
     function keyOf(w) { return w.composer + '|' + w.title + '|' + (w.op || ''); }
     function searchUrl(w) { return 'https://music.apple.com/search?term=' + encodeURIComponent(w.composer + ' ' + w.title); }
-
-    var last = -1, started = false;
-    function pick() { var i; do { i = Math.floor(Math.random() * works.length); } while (i === last && works.length > 1); last = i; return works[i]; }
 
     function resolveLink(w, anchor) {
       var key = keyOf(w);
@@ -138,69 +135,112 @@ import { works } from './tea-works.js';
       document.head.appendChild(s);
     }
 
-    // Keep the work title on ONE line. Plain white-space:nowrap would overflow
-    // narrow screens, so scale the font down to the cup's available width; only
-    // if that drops below a readable floor do we let it wrap. Re-runs on resize
-    // and once webfonts finish loading (Charter changes the measured width).
-    var curTitle = null;
-    function fitTitle(el) {
-      var cup = workEl.parentNode;                 // .tea-cup — full-width block
-      el.style.whiteSpace = 'nowrap';
-      el.style.fontSize = '';                      // reset to the stylesheet 1.55rem
-      var avail = cup ? cup.clientWidth : 0;
-      if (!avail || el.scrollWidth <= avail) return;   // already fits one line
-      var basePx = parseFloat(getComputedStyle(el).fontSize) || 24;
-      var fitPx = basePx * (avail / el.scrollWidth) * 0.99;
-      var floorPx = basePx * 0.61;                 // ~0.95rem — below this, wrap instead
-      if (fitPx < floorPx) { el.style.whiteSpace = 'normal'; el.style.fontSize = floorPx + 'px'; }
-      else { el.style.fontSize = fitPx + 'px'; }
-    }
-    var rsz;
-    window.addEventListener('resize', function () {
-      clearTimeout(rsz);
-      rsz = setTimeout(function () { if (curTitle && curTitle.isConnected) fitTitle(curTitle); }, 150);
-    });
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function () { if (curTitle && curTitle.isConnected) fitTitle(curTitle); });
-    }
+    // 指向「当前首页实例」的标题重排入口；resize / 字体就绪时调用。视图过渡
+    // 换入新 DOM 后由 setup() 重新指向最新一份。
+    var refitCurrent = null;
 
-    function render(w) {
-      var key = keyOf(w);
-      var href = cache[key] || searchUrl(w);
-      workEl.innerHTML =
-        '<div class="tea-composer"></div>' +
-        '<div class="tea-title"></div>' +
-        '<div class="tea-op"></div>' +
-        '<div class="tea-perf"></div>' +
-        '<a class="tea-listen" target="_blank" rel="noopener noreferrer">在 Apple Music 听 ↗</a>' +
-        '<div class="tea-genre"></div>';
-      workEl.querySelector('.tea-composer').textContent = w.composer;
-      var titleEl = workEl.querySelector('.tea-title');
-      titleEl.textContent = w.title;
-      curTitle = titleEl; fitTitle(titleEl);
-      var opEl = workEl.querySelector('.tea-op');
-      if (w.op) { opEl.textContent = w.op; } else { opEl.remove(); }
-      workEl.querySelector('.tea-perf').textContent = w.perf;
-      var a = workEl.querySelector('.tea-listen'); a.href = href; a.dataset.k = key;
-      var g = workEl.querySelector('.tea-genre'); if (w.genre) g.textContent = w.genre; else g.remove();
-      if (!cache[key]) resolveLink(w, a);
-      workEl.classList.remove('tea-ink-out'); void workEl.offsetWidth; workEl.classList.add('tea-ink-in');
-    }
+    // ── 每次进入首页都要重做的部分（首屏 + 每次无刷新跳转回首页）────────────
+    // 内联脚本在 ClientRouter 的 swap 后不会自动重新执行，所以换入的新茶印
+    // 节点必须在 astro:after-swap 时重新绑定，否则点击毫无反应、需手动刷新。
+    function setup() {
+      var seal = document.getElementById('tea-seal');
+      // 仅首页存在；dataset 守卫保证同一个换入节点只绑定一次（避免一点斟两杯）。
+      if (!seal || seal.dataset.teaBound === '1') return;
+      seal.dataset.teaBound = '1';
+      var invite = document.getElementById('tea-invite');
+      var workEl = document.getElementById('tea-work');
+      var again = document.getElementById('tea-again');
+      var pourBox = document.getElementById('tea-pour');   // overflow:hidden 高度动画容器
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    function pour() {
-      seal.classList.remove('is-pour'); void seal.offsetWidth; seal.classList.add('is-pour');
-      if (!started) {
-        started = true; invite.style.opacity = '0';
-        setTimeout(function () { invite.style.display = 'none'; }, 400);
-        render(pick());
-        setTimeout(function () { again.classList.add('is-show'); }, 700);
-      } else {
-        workEl.classList.remove('tea-ink-in'); workEl.classList.add('tea-ink-out');
-        setTimeout(function () { render(pick()); }, 420);
+      var last = -1, started = false;
+      function pick() { var i; do { i = Math.floor(Math.random() * works.length); } while (i === last && works.length > 1); last = i; return works[i]; }
+
+      // Keep the work title on ONE line. Plain white-space:nowrap would overflow
+      // narrow screens, so scale the font down to the cup's available width; only
+      // if that drops below a readable floor do we let it wrap. Re-runs on resize
+      // and once webfonts finish loading (Charter changes the measured width).
+      var curTitle = null;
+      function fitTitle(el) {
+        var cup = workEl.parentNode;                 // .tea-cup — full-width block
+        el.style.whiteSpace = 'nowrap';
+        el.style.fontSize = '';                      // reset to the stylesheet 1.55rem
+        var avail = cup ? cup.clientWidth : 0;
+        if (!avail || el.scrollWidth <= avail) return;   // already fits one line
+        var basePx = parseFloat(getComputedStyle(el).fontSize) || 24;
+        var fitPx = basePx * (avail / el.scrollWidth) * 0.99;
+        var floorPx = basePx * 0.61;                 // ~0.95rem — below this, wrap instead
+        if (fitPx < floorPx) { el.style.whiteSpace = 'normal'; el.style.fontSize = floorPx + 'px'; }
+        else { el.style.fontSize = fitPx + 'px'; }
       }
+      refitCurrent = function () { if (curTitle && curTitle.isConnected) fitTitle(curTitle); };
+
+      function render(w) {
+        var key = keyOf(w);
+        var href = cache[key] || searchUrl(w);
+        workEl.innerHTML =
+          '<div class="tea-composer"></div>' +
+          '<div class="tea-title"></div>' +
+          '<div class="tea-op"></div>' +
+          '<div class="tea-perf"></div>' +
+          '<a class="tea-listen" target="_blank" rel="noopener noreferrer">在 Apple Music 听 ↗</a>' +
+          '<div class="tea-genre"></div>';
+        workEl.querySelector('.tea-composer').textContent = w.composer;
+        var titleEl = workEl.querySelector('.tea-title');
+        titleEl.textContent = w.title;
+        curTitle = titleEl; fitTitle(titleEl);
+        var opEl = workEl.querySelector('.tea-op');
+        if (w.op) { opEl.textContent = w.op; } else { opEl.remove(); }
+        workEl.querySelector('.tea-perf').textContent = w.perf;
+        var a = workEl.querySelector('.tea-listen'); a.href = href; a.dataset.k = key;
+        var g = workEl.querySelector('.tea-genre'); if (w.genre) g.textContent = w.genre; else g.remove();
+        if (!cache[key]) resolveLink(w, a);
+        workEl.classList.remove('tea-ink-out'); void workEl.offsetWidth; workEl.classList.add('tea-ink-in');
+      }
+
+      function pour() {
+        seal.classList.remove('is-pour'); void seal.offsetWidth; seal.classList.add('is-pour');
+        if (!started) {
+          started = true; invite.style.opacity = '0';
+          // 先量「提示态」高度，注入作品后再量「作品态」高度，然后对容器 height
+          // 做缓动过渡 —— 近期文章随之缓缓下移，而非内容注入瞬间硬跳下去。
+          var startH = pourBox.offsetHeight;
+          render(pick());
+          if (!reduced) {
+            var endH = pourBox.scrollHeight;
+            pourBox.style.height = startH + 'px';
+            pourBox.style.transition = 'height .6s cubic-bezier(.2,.6,.3,1)';
+            void pourBox.offsetWidth;                 // commit 起点，确保过渡触发
+            pourBox.style.height = endH + 'px';
+            // 动画结束解锁回 auto，让「再来一杯」换不同高度的作品时自适应、不被裁剪。
+            setTimeout(function () { pourBox.style.height = 'auto'; pourBox.style.transition = ''; }, 650);
+          }
+          setTimeout(function () { invite.style.display = 'none'; }, 400);
+          setTimeout(function () { again.classList.add('is-show'); }, 700);
+        } else {
+          workEl.classList.remove('tea-ink-in'); workEl.classList.add('tea-ink-out');
+          setTimeout(function () { render(pick()); }, 420);
+        }
+      }
+      seal.addEventListener('click', pour);
+      seal.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pour(); } });
+      again.addEventListener('click', pour);
     }
-    seal.addEventListener('click', pour);
-    seal.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pour(); } });
-    again.addEventListener('click', pour);
+
+    // 一次性持久监听（window/document 跨视图过渡留存，勿重复注册）。标题重排
+    // 经 refitCurrent 指针作用于当前页那一份。
+    if (!window.__teaSealBound) {
+      window.__teaSealBound = true;
+      var rsz;
+      window.addEventListener('resize', function () {
+        clearTimeout(rsz);
+        rsz = setTimeout(function () { if (refitCurrent) refitCurrent(); }, 150);
+      });
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { if (refitCurrent) refitCurrent(); });
+      }
+      document.addEventListener('astro:after-swap', setup);
+    }
+    setup();
   })();
 </script>

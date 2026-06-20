@@ -20,7 +20,14 @@
     position: fixed; inset: 0; z-index: 50;
     background: var(--surface-page, #f6f5f1);
     display: grid; place-items: center; cursor: pointer;
+    /* 默认隐藏：视图过渡无刷新换入首页时，遮罩不会先可见一帧再被脚本隐去
+       （那会造成「抽搐」）。只有进场播放（.in）时才显出。 */
+    opacity: 0; visibility: hidden;
   }
+  .kissako-splash.in {
+    opacity: 1; visibility: visible;
+  }
+  /* 退场 / 已看过：淡出隐去。规则置于 .in 之后，故 .in.out 并存时 .out 胜出。 */
   .kissako-splash.out {
     opacity: 0; filter: blur(4px); transform: translateY(-14px); visibility: hidden;
     transition: opacity 1s ease, filter 1s ease, transform 1s ease, visibility 1s ease;
@@ -60,26 +67,48 @@
 
 <script is:inline>
   (function () {
-    var splash = document.getElementById('kissako-splash');
-    if (!splash) return;
     var ENTRANCE = 1100, HOLD = 1800;   // ← 调这里改停留时长（ms）
-    var t = null;
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var t = null;
 
-    function dismiss() { if (t) { clearTimeout(t); t = null; } splash.classList.add('out'); document.body.style.overflow = ''; }
-    function play() {
-      if (reduced) return;
+    // 当前页上「尚未隐去」的遮罩；没有则返回 null。
+    function liveSplash() {
+      var s = document.getElementById('kissako-splash');
+      return s && !s.classList.contains('out') ? s : null;
+    }
+    function dismiss() {
+      if (t) { clearTimeout(t); t = null; }
+      var s = document.getElementById('kissako-splash');
+      if (s) s.classList.add('out');
+      document.body.style.overflow = '';
+    }
+
+    // 每次进入首页（首屏 + 视图过渡无刷新跳转）都要处理遮罩：内联脚本本身
+    // 在 ClientRouter 的 swap 时不会被重新执行，若不在此重新隐去，换入的全屏
+    // 遮罩会一直盖住整页 → 看上去一片空白，必须刷新。
+    function setup() {
+      var splash = document.getElementById('kissako-splash');
+      // dataset 守卫：同一个换入节点只处理一次（避免重复 setTimeout/重播）。
+      if (!splash || splash.dataset.kkBound === '1') return;
+      splash.dataset.kkBound = '1';
+      var seen = false;
+      try { seen = sessionStorage.getItem('kissako_splash') === '1'; } catch (e) {}
+      if (seen || reduced) { splash.classList.add('out'); document.body.style.overflow = ''; return; }
       splash.classList.remove('out'); void splash.offsetWidth; splash.classList.add('in');
       document.body.style.overflow = 'hidden';
       t = setTimeout(dismiss, ENTRANCE + HOLD);
+      try { sessionStorage.setItem('kissako_splash', '1'); } catch (e) {}
+      splash.addEventListener('click', dismiss);
     }
-    var seen = false;
-    try { seen = sessionStorage.getItem('kissako_splash') === '1'; } catch (e) {}
-    if (seen || reduced) { splash.classList.add('out'); }
-    else { play(); try { sessionStorage.setItem('kissako_splash', '1'); } catch (e) {} }
 
-    splash.addEventListener('click', dismiss);
-    window.addEventListener('keydown', function () { if (!splash.classList.contains('out')) dismiss(); });
-    window.addEventListener('wheel', function () { if (!splash.classList.contains('out')) dismiss(); }, { passive: true });
+    // 持久监听只注册一次（window/document 跨视图过渡留存）；防止内联脚本若被
+    // 重复执行时叠加监听或重复绑定。
+    if (!window.__kissakoBound) {
+      window.__kissakoBound = true;
+      window.addEventListener('keydown', function () { if (liveSplash()) dismiss(); });
+      window.addEventListener('wheel', function () { if (liveSplash()) dismiss(); }, { passive: true });
+      document.addEventListener('astro:after-swap', setup);
+    }
+    setup();
   })();
 </script>
