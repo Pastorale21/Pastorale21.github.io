@@ -1,246 +1,119 @@
 ---
-// TeaSeal.astro — 首页「喫茶去」茶印交互。
-// 点茶印 → 墨迹显影斟出一首作品（来自 tea-works.js），并通过 iTunes Search
-// API（JSONP）解析出精准的 Apple Music 专辑链接，结果缓存在 localStorage。
-// 解析被拦时回退到搜索链接，永不断链。无需 React。
-//
-// 用法：在首页（如 src/pages/index.astro）放 <TeaSeal />，
-// 通常放在 <近期文章> 列表上方。字体/颜色用站点已有的 CSS 变量，
-// 缺失时有回退色。
-import { works } from './tea-works.js';
+// TeaSeal.astro — 首页左栏的「茶印」触发器：只负责印本身与其动效。
+// 斟出的作品由 TeaPourBand.astro 渲染到右栏顶部的带子；二者通过
+// #tea-seal / #tea-band 协作，控制脚本在 TeaPourBand.astro。
 ---
-<section class="tea">
-  <!-- SVG filters for the seal: ts-erode roughens the stamp's edge; ts-brush
-       gives the carved 汤吞 its hand-cut wobble. Defined once, off-layout. -->
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <filter id="ts-erode" x="-18%" y="-18%" width="136%" height="136%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n"/>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-    <filter id="ts-brush" x="-30%" y="-30%" width="160%" height="160%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.07 0.09" numOctaves="2" seed="4" result="w"/>
-      <feDisplacementMap in="SourceGraphic" in2="w" scale="2.6"/>
-    </filter>
-  </svg>
-  <div class="tea-seal" id="tea-seal" role="button" tabindex="0" aria-label="喫茶——斟一首作品">
-    <svg viewBox="0 0 100 100" aria-hidden="true">
-      <g filter="url(#ts-brush)" fill="none" stroke="currentColor"
-         stroke-linecap="round" stroke-linejoin="round">
-        <!-- 热气：三缕错落 S 形 -->
-        <g stroke-width="3.6">
-          <path d="M40 29 C36 25 44 22 40 18 C38 16 42 16 42 15"/>
-          <path d="M50 29 C46 24 55 20 50 14 C47 10 53 9 53 5"/>
-          <path d="M60 29 C64 25 56 21 60 17 C62 14 60 12 61 10"/>
-        </g>
-        <!-- 杯身（含圈足）≈1.2:1 -->
-        <path stroke-width="6" d="M31 37 34 73 41 73 41 79 59 79 59 73 67 73 70 37"/>
-        <!-- 外翻薄唇 -->
-        <path stroke-width="4.5" d="M28 36C39 33 61 33 72 36 61 39 39 39 28 36Z"/>
-      </g>
-    </svg>
-    <span class="ring"></span>
-  </div>
-  <div class="tea-cup">
-    <div class="tea-pour" id="tea-pour">
-      <div class="tea-work" id="tea-work" aria-live="polite"></div>
-      <div class="tea-invite" id="tea-invite">喝一杯</div>
-    </div>
-  </div>
-  <button class="tea-again" id="tea-again" type="button">再来一杯 ↻</button>
-</section>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ts-erode" x="-18%" y="-18%" width="136%" height="136%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="ts-brush" x="-30%" y="-30%" width="160%" height="160%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.07 0.09" numOctaves="2" seed="4" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="2.6"/>
+  </filter>
+</svg>
 
-<!-- 注意：作品卡片由脚本在运行时用 innerHTML 注入，而 Astro 的作用域 <style>
-     只作用于构建期已存在的元素 —— 所以这里必须用 is:global，否则 .tea-composer /
-     .tea-title / .tea-listen 等动态元素拿不到样式（会全部塌成默认字号、链接也不会变成
-     强调色）。类名均带 tea- 前缀，不会污染全局。 -->
+<div class="tea-seal" id="tea-seal" role="button" tabindex="0" aria-label="喫茶——斟一首作品">
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <g filter="url(#ts-brush)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <g class="steam" stroke-width="3.6">
+        <path d="M40 29 C36 25 44 22 40 18 C38 16 42 16 42 15"/>
+        <path d="M50 29 C46 24 55 20 50 14 C47 10 53 9 53 5"/>
+        <path d="M60 29 C64 25 56 21 60 17 C62 14 60 12 61 10"/>
+      </g>
+      <path stroke-width="6" d="M31 37 34 73 41 73 41 79 59 79 59 73 67 73 70 37"/>
+      <path stroke-width="4.5" d="M28 36C39 33 61 33 72 36 61 39 39 39 28 36Z"/>
+    </g>
+  </svg>
+  <span class="ring"></span>
+</div>
+<div class="tea-seal-cap">喝一杯</div>
+
 <style is:global>
-  .tea { text-align: center; padding: 1rem 0 2.4rem; }
-  /* 白文方印 — terracotta stamp with the 汤吞 carved out as negative space.
-     background = the accent ink; the SVG strokes use currentColor = the page
-     surface, so the carving shows the paper through and tracks light/dark.
-     filter:url(#ts-erode) roughens the printed edge. */
   .tea-seal {
-    width: 5.2rem; height: 5.2rem; margin: 0 auto; border-radius: 22%;
-    display: grid; place-items: center; position: relative;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 22%;
+    display: grid;
+    place-items: center;
+    position: relative;
     background: var(--color-seal, #b1462f);
     color: var(--surface-page, #f6f5f1);
     filter: url(#ts-erode);
-    cursor: pointer; user-select: none; outline: none;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
     -webkit-tap-highlight-color: transparent;
-    transition: transform .25s cubic-bezier(.2,.7,.3,1.4);
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1.4);
   }
-  .tea-seal:active { transform: scale(.93); }
+  .tea-seal:active { transform: scale(0.93); }
   .tea-seal:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent, #b1462f) 32%, transparent); }
   .tea-seal svg { display: block; width: 58%; height: 58%; }
-  .tea-seal .ring { position: absolute; inset: -8px; border-radius: 24%; border: 1px solid var(--accent, #b1462f); opacity: 0; transform: scale(.8); pointer-events: none; }
-  .tea-seal.is-pour .ring { animation: ts-ripple .7s ease-out; }
-  @keyframes ts-ripple { 0% { opacity:.5; transform:scale(.85);} 100% { opacity:0; transform:scale(1.6);} }
 
-  /* 「喝一杯」提示与作品叠放在同一格（.tea-pour > *），显隐走纯 opacity。点击
-     斟茶时由脚本把 .tea-pour 的高度从「提示态」缓动过渡到「作品态」（见 first-
-     pour 分支），近期文章随容器高度缓缓下移 —— 不瞬跳、不回弹、不二段跳。 */
-  .tea-invite { font-size: .75rem; letter-spacing: .14em; color: var(--text-quiet, #6b6a64); transition: opacity .35s ease; }
-  .tea-cup { margin-top: 1.3rem; }
-  .tea-pour { overflow: hidden; display: grid; justify-items: center; align-items: center; }
-  .tea-pour > * { grid-area: 1 / 1; }   /* 作品与提示叠放同格，高度动画作用于容器 */
-  .tea-composer { font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-quiet, #6b6a64); }
-  .tea-title { font-size: 1.55rem; line-height: 1.4; color: var(--text-strong, #353534); margin: .55rem auto .15rem; max-width: 100%; white-space: nowrap; font-family: var(--font-sans, Georgia, serif); }
-  .tea-op { display: block; font-family: var(--font-charter, "IM Fell English", Georgia, serif); font-style: italic; font-size: 1rem; line-height: 1.35; color: var(--text-quiet, #6b6a64); margin: .15rem auto .1rem; max-width: 26rem; text-wrap: balance; }
-  .tea-perf { font-size: .875rem; color: var(--text-muted, #555); font-style: italic; font-family: var(--font-charter, "IM Fell English", Georgia, serif); }
-  .tea-listen { display: inline-flex; align-items: center; gap: .3rem; margin-top: 1.1rem; font-size: .875rem; color: var(--accent, #b1462f); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color .2s ease; }
-  .tea-listen:hover { border-bottom-color: var(--accent, #b1462f); }
-  .tea-genre { margin-top: .8rem; font-size: .75rem; letter-spacing: .18em; color: var(--text-quiet, #6b6a64); opacity: .7; }
+  /* 点击引导：茶印下方一行安静的提示 */
+  .tea-seal-cap {
+    margin-top: 0.7rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    color: var(--text-quiet, #6b6a64);
+  }
 
-  .tea-again { margin-top: 1.3rem; font-size: .875rem; color: var(--text-quiet, #6b6a64); background: none; border: none; cursor: pointer; font-family: var(--font-sans, Georgia, serif); letter-spacing: .04em; opacity: 0; transition: opacity .5s ease, color .2s ease; }
-  .tea-again.is-show { opacity: .85; }
-  .tea-again:hover { color: var(--accent, #b1462f); }
+  /* 待点击引导 · 暖意呼吸 + 袅袅热气（首次斟茶后 .started 停止） */
+  .tea-seal:not(.started) { animation: tea-ember 3.6s ease-in-out infinite; }
+  @keyframes tea-ember {
+    0%, 100% { background: var(--color-seal, #b1462f); }
+    50% { background: color-mix(in oklab, var(--color-seal, #b1462f) 72%, oklch(82% 0.13 50)); }
+  }
+  .tea-seal:not(.started) .steam path { animation: tea-idle-steam 3.2s ease-in-out infinite; }
+  .tea-seal:not(.started) .steam path:nth-child(2) { animation-delay: 0.5s; }
+  .tea-seal:not(.started) .steam path:nth-child(3) { animation-delay: 1s; }
+  @keyframes tea-idle-steam {
+    0% { stroke-dashoffset: 30; opacity: 0.25; }
+    45% { opacity: 0.9; }
+    90% { stroke-dashoffset: 0; opacity: 0.15; }
+    100% { opacity: 0; }
+  }
 
-  .tea-ink-in { animation: teaInkIn .9s cubic-bezier(.2,.6,.3,1) forwards; }
-  .tea-ink-out { animation: teaInkOut .42s ease forwards; }
-  @keyframes teaInkIn { from { opacity:0; transform:translateY(8px); filter:blur(6px);} to { opacity:1; transform:none; filter:blur(0);} }
-  @keyframes teaInkOut { from { opacity:1; filter:blur(0);} to { opacity:0; transform:translateY(-8px); filter:blur(4px);} }
+  /* 落印手势：每次斟茶按一下并微侧（一次性） */
+  .tea-seal.is-pour { animation: ts-stamp 0.34s cubic-bezier(0.3, 0.8, 0.3, 1); }
+  @keyframes ts-stamp {
+    0% { transform: scale(1) rotate(0); }
+    38% { transform: scale(0.9) rotate(-2deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  .tea-seal .ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 24%;
+    border: 1px solid var(--accent, #b1462f);
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+  }
+  .tea-seal.is-pour .ring { animation: ts-ripple 0.7s ease-out; }
+  @keyframes ts-ripple {
+    0% { opacity: 0.5; transform: scale(0.85); }
+    100% { opacity: 0; transform: scale(1.6); }
+  }
+
+  /* 蒸汽：三缕热气斟茶时依次升腾（一次性） */
+  .tea-seal .steam path { stroke-dasharray: 30; stroke-dashoffset: 0; }
+  .tea-seal.is-pour .steam path { animation: ts-steam 0.85s ease-out; }
+  .tea-seal.is-pour .steam path:nth-child(2) { animation-delay: 0.08s; }
+  .tea-seal.is-pour .steam path:nth-child(3) { animation-delay: 0.16s; }
+  @keyframes ts-steam {
+    from { stroke-dashoffset: 30; opacity: 0.15; }
+    60% { opacity: 1; }
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .tea-ink-in, .tea-ink-out, .tea-seal.is-pour .ring { animation: none !important; }
-    .tea-ink-out { opacity: 1; }
+    .tea-seal.is-pour,
+    .tea-seal.is-pour .ring,
+    .tea-seal.is-pour .steam path,
+    .tea-seal:not(.started),
+    .tea-seal:not(.started) .steam path { animation: none !important; }
   }
 </style>
-
-<script define:vars={{ works }}>
-  (function () {
-    // ── 跨视图过渡持久、只需初始化一次的部分 ───────────────────────────────
-    var STORE = 'kissako_am_urls';
-    var cache = {};
-    try { cache = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) {}
-    function saveCache() { try { localStorage.setItem(STORE, JSON.stringify(cache)); } catch (e) {} }
-    function keyOf(w) { return w.composer + '|' + w.title + '|' + (w.op || ''); }
-    function searchUrl(w) { return 'https://music.apple.com/search?term=' + encodeURIComponent(w.composer + ' ' + w.title); }
-
-    function resolveLink(w, anchor) {
-      var key = keyOf(w);
-      if (cache[key]) { anchor.href = cache[key]; return; }
-      var term = (w.op ? w.op : w.title) + ' ' + w.composer;
-      var cb = 'itunesCb_' + Math.random().toString(36).slice(2);
-      var s = document.createElement('script');
-      var done = function () { try { delete window[cb]; } catch (e) {} if (s.parentNode) s.parentNode.removeChild(s); };
-      window[cb] = function (data) {
-        try {
-          var r = data && data.results && data.results[0];
-          var u = r && (r.collectionViewUrl || r.trackViewUrl);
-          if (u) { cache[key] = u; saveCache(); if (anchor.dataset.k === key) anchor.href = u; }
-        } catch (e) {}
-        done();
-      };
-      s.onerror = done;
-      s.src = 'https://itunes.apple.com/search?limit=1&entity=album&term=' + encodeURIComponent(term) + '&callback=' + cb;
-      document.head.appendChild(s);
-    }
-
-    // 指向「当前首页实例」的标题重排入口；resize / 字体就绪时调用。视图过渡
-    // 换入新 DOM 后由 setup() 重新指向最新一份。
-    var refitCurrent = null;
-
-    // ── 每次进入首页都要重做的部分（首屏 + 每次无刷新跳转回首页）────────────
-    // 内联脚本在 ClientRouter 的 swap 后不会自动重新执行，所以换入的新茶印
-    // 节点必须在 astro:after-swap 时重新绑定，否则点击毫无反应、需手动刷新。
-    function setup() {
-      var seal = document.getElementById('tea-seal');
-      // 仅首页存在；dataset 守卫保证同一个换入节点只绑定一次（避免一点斟两杯）。
-      if (!seal || seal.dataset.teaBound === '1') return;
-      seal.dataset.teaBound = '1';
-      var invite = document.getElementById('tea-invite');
-      var workEl = document.getElementById('tea-work');
-      var again = document.getElementById('tea-again');
-      var pourBox = document.getElementById('tea-pour');   // overflow:hidden 高度动画容器
-      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      var last = -1, started = false;
-      function pick() { var i; do { i = Math.floor(Math.random() * works.length); } while (i === last && works.length > 1); last = i; return works[i]; }
-
-      // Keep the work title on ONE line. Plain white-space:nowrap would overflow
-      // narrow screens, so scale the font down to the cup's available width; only
-      // if that drops below a readable floor do we let it wrap. Re-runs on resize
-      // and once webfonts finish loading (Charter changes the measured width).
-      var curTitle = null;
-      function fitTitle(el) {
-        var cup = workEl.parentNode;                 // .tea-cup — full-width block
-        el.style.whiteSpace = 'nowrap';
-        el.style.fontSize = '';                      // reset to the stylesheet 1.55rem
-        var avail = cup ? cup.clientWidth : 0;
-        if (!avail || el.scrollWidth <= avail) return;   // already fits one line
-        var basePx = parseFloat(getComputedStyle(el).fontSize) || 24;
-        var fitPx = basePx * (avail / el.scrollWidth) * 0.99;
-        var floorPx = basePx * 0.61;                 // ~0.95rem — below this, wrap instead
-        if (fitPx < floorPx) { el.style.whiteSpace = 'normal'; el.style.fontSize = floorPx + 'px'; }
-        else { el.style.fontSize = fitPx + 'px'; }
-      }
-      refitCurrent = function () { if (curTitle && curTitle.isConnected) fitTitle(curTitle); };
-
-      function render(w) {
-        var key = keyOf(w);
-        var href = cache[key] || searchUrl(w);
-        workEl.innerHTML =
-          '<div class="tea-composer"></div>' +
-          '<div class="tea-title"></div>' +
-          '<div class="tea-op"></div>' +
-          '<div class="tea-perf"></div>' +
-          '<a class="tea-listen" target="_blank" rel="noopener noreferrer">在 Apple Music 听 ↗</a>' +
-          '<div class="tea-genre"></div>';
-        workEl.querySelector('.tea-composer').textContent = w.composer;
-        var titleEl = workEl.querySelector('.tea-title');
-        titleEl.textContent = w.title;
-        curTitle = titleEl; fitTitle(titleEl);
-        var opEl = workEl.querySelector('.tea-op');
-        if (w.op) { opEl.textContent = w.op; } else { opEl.remove(); }
-        workEl.querySelector('.tea-perf').textContent = w.perf;
-        var a = workEl.querySelector('.tea-listen'); a.href = href; a.dataset.k = key;
-        var g = workEl.querySelector('.tea-genre'); if (w.genre) g.textContent = w.genre; else g.remove();
-        if (!cache[key]) resolveLink(w, a);
-        workEl.classList.remove('tea-ink-out'); void workEl.offsetWidth; workEl.classList.add('tea-ink-in');
-      }
-
-      function pour() {
-        seal.classList.remove('is-pour'); void seal.offsetWidth; seal.classList.add('is-pour');
-        if (!started) {
-          started = true; invite.style.opacity = '0';
-          // 先量「提示态」高度，注入作品后再量「作品态」高度，然后对容器 height
-          // 做缓动过渡 —— 近期文章随之缓缓下移，而非内容注入瞬间硬跳下去。
-          var startH = pourBox.offsetHeight;
-          render(pick());
-          if (!reduced) {
-            var endH = pourBox.scrollHeight;
-            pourBox.style.height = startH + 'px';
-            pourBox.style.transition = 'height .6s cubic-bezier(.2,.6,.3,1)';
-            void pourBox.offsetWidth;                 // commit 起点，确保过渡触发
-            pourBox.style.height = endH + 'px';
-            // 动画结束解锁回 auto，让「再来一杯」换不同高度的作品时自适应、不被裁剪。
-            setTimeout(function () { pourBox.style.height = 'auto'; pourBox.style.transition = ''; }, 650);
-          }
-          setTimeout(function () { invite.style.display = 'none'; }, 400);
-          setTimeout(function () { again.classList.add('is-show'); }, 700);
-        } else {
-          workEl.classList.remove('tea-ink-in'); workEl.classList.add('tea-ink-out');
-          setTimeout(function () { render(pick()); }, 420);
-        }
-      }
-      seal.addEventListener('click', pour);
-      seal.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pour(); } });
-      again.addEventListener('click', pour);
-    }
-
-    // 一次性持久监听（window/document 跨视图过渡留存，勿重复注册）。标题重排
-    // 经 refitCurrent 指针作用于当前页那一份。
-    if (!window.__teaSealBound) {
-      window.__teaSealBound = true;
-      var rsz;
-      window.addEventListener('resize', function () {
-        clearTimeout(rsz);
-        rsz = setTimeout(function () { if (refitCurrent) refitCurrent(); }, 150);
-      });
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function () { if (refitCurrent) refitCurrent(); });
-      }
-      document.addEventListener('astro:after-swap', setup);
-    }
-    setup();
-  })();
-</script>

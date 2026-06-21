@@ -1,0 +1,300 @@
+---
+// TeaPourBand.astro — 左栏脊柱里的「斟茶带」。点 #tea-seal 后，从 tea-works.js
+// 随机斟一首：正在听 / 流派·作曲家 / 标题 / 演奏 / 听 / 再斟一首。纯文字（不显封面），
+// 保留神秘感。扁平纯纸 + 一条上分割线，符合 DESIGN.md（无填充、无阴影）。
+// iTunes JSONP 仅用于解析「在 Apple Music 听」的真实链接，结果缓存 localStorage；
+// 解析失败回退搜索链接，永不断链。未斟茶时整块折叠、不占位。
+import { works } from "./tea-works.js";
+---
+<div class="tea-band-wrap" id="tea-band-wrap">
+  <div class="tea-band" id="tea-band" aria-live="polite"></div>
+</div>
+
+<style is:global>
+  /* 斟茶前完全折叠、不占位（空带 + 零内边距 = 零高，由 JS 平滑展开）；
+     首次斟出后才显现上分割线与间距 */
+  .tea-band-wrap {
+    overflow: hidden;
+    margin: 0;
+    border-top: 0 solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+  }
+  .tea-band-wrap.is-on {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+  }
+  .tea-band { padding: 0; }
+
+  /* 段标签「正在听」，与脊柱其他小标题同一套字号/字距 */
+  .tea-band-label {
+    margin: 0 0 0.9rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    color: color-mix(in oklab, var(--text-strong, #353534) 40%, transparent);
+  }
+
+  .tea-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .tea-kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--text-quiet, #6b6a64);
+  }
+  .tea-kicker .dot { margin: 0 0.5em; opacity: 0.5; }
+  .tea-title {
+    font-size: 1.05rem;
+    line-height: 1.34;
+    font-weight: 400;
+    color: var(--text-strong, #353534);
+    font-family: var(--font-sans, ui-serif, Georgia, serif);
+    text-wrap: balance;
+  }
+  .tea-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted, #5a5852);
+    font-family: var(--font-charter, "IM Fell English", Georgia, serif);
+    font-style: italic;
+  }
+
+  /* 操作竖排，左对齐（脊柱里不再是横带的两端分布） */
+  .tea-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin-top: 0.95rem;
+  }
+  .tea-listen {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--accent, #b1462f);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 1px;
+    transition: border-color 0.2s ease;
+  }
+  .tea-listen:hover { border-bottom-color: var(--accent, #b1462f); }
+  .tea-again {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: var(--font-sans, ui-serif, Georgia, serif);
+    color: var(--text-quiet, #6b6a64);
+    transition: color 0.2s ease;
+  }
+  .tea-again:hover { color: var(--accent, #b1462f); }
+  .tea-again .ico { display: inline-block; transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .tea-again:hover .ico { transform: rotate(180deg); }
+
+  /* 显墨：标签/信息/操作错开淡入 */
+  .tea-band-fill > * { animation: teaInkIn 0.7s cubic-bezier(0.2, 0.6, 0.3, 1) both; }
+  .tea-band-fill .tea-band-label { animation-delay: 0s; }
+  .tea-band-fill .tea-info { animation-delay: 0.06s; }
+  .tea-band-fill .tea-actions { animation-delay: 0.12s; }
+  @keyframes teaInkIn {
+    from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+    to { opacity: 1; transform: none; filter: blur(0); }
+  }
+
+  @media (max-width: 760px) {
+    /* 移动端脊柱变成横排时，斟茶带占整行 */
+    .tea-band-wrap.is-on { flex-basis: 100%; }
+    .tea-actions { flex-direction: row; align-items: center; gap: 1.1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tea-band-fill > * { animation: none !important; }
+  }
+</style>
+
+<script define:vars={{ works }}>
+  (function () {
+    var STORE = "kissako_am_v2",
+      cache = {};
+    try {
+      cache = JSON.parse(localStorage.getItem(STORE) || "{}");
+    } catch (e) {}
+    function save() {
+      try {
+        localStorage.setItem(STORE, JSON.stringify(cache));
+      } catch (e) {}
+    }
+    function keyOf(w) {
+      return w.composer + "|" + w.title + "|" + (w.op || "");
+    }
+    function searchUrl(w) {
+      return "https://music.apple.com/search?term=" + encodeURIComponent(w.composer + " " + w.title);
+    }
+
+    function resolve(w, onData) {
+      var key = keyOf(w);
+      if (cache[key]) {
+        onData(cache[key]);
+        return;
+      }
+      var term = (w.op ? w.op : w.title) + " " + w.composer;
+      var cb = "itc_" + Math.random().toString(36).slice(2);
+      var s = document.createElement("script");
+      var done = function () {
+        try {
+          delete window[cb];
+        } catch (e) {}
+        if (s.parentNode) s.parentNode.removeChild(s);
+      };
+      window[cb] = function (data) {
+        try {
+          var r = data && data.results && data.results[0];
+          if (r) {
+            var rec = {
+              url: r.collectionViewUrl || r.trackViewUrl || "",
+              art: (r.artworkUrl100 || "").replace("100x100", "300x300"),
+            };
+            cache[key] = rec;
+            save();
+            onData(rec);
+          }
+        } catch (e) {}
+        done();
+      };
+      s.onerror = done;
+      s.src =
+        "https://itunes.apple.com/search?limit=1&entity=album&term=" +
+        encodeURIComponent(term) +
+        "&callback=" +
+        cb;
+      document.head.appendChild(s);
+    }
+
+    function setup() {
+      var seal = document.getElementById("tea-seal");
+      var band = document.getElementById("tea-band");
+      var wrap = document.getElementById("tea-band-wrap");
+      if (!seal || !band || !wrap || seal.dataset.teaBound === "1") return;
+      seal.dataset.teaBound = "1";
+      var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var last = -1,
+        started = false;
+      function pick() {
+        var i;
+        do {
+          i = Math.floor(Math.random() * works.length);
+        } while (i === last && works.length > 1);
+        last = i;
+        return works[i];
+      }
+
+      function render(w) {
+        var key = keyOf(w);
+        var rec = cache[key] || { url: searchUrl(w), art: "" };
+        band.className = "tea-band tea-band-fill";
+        band.innerHTML =
+          '<h4 class="tea-band-label">正在听</h4>' +
+          '<div class="tea-info">' +
+          '<span class="tea-kicker"></span>' +
+          '<span class="tea-title" id="tea-title"></span>' +
+          '<span class="tea-sub"></span>' +
+          "</div>" +
+          '<div class="tea-actions">' +
+          '<a class="tea-listen" target="_blank" rel="noopener noreferrer">在 Apple Music 听 ↗</a>' +
+          '<button class="tea-again" type="button"><span class="ico">↻</span> 再斟一首</button>' +
+          "</div>";
+        var kEl = band.querySelector(".tea-kicker");
+        if (w.genre) {
+          var g = document.createElement("span");
+          g.textContent = w.genre;
+          var d = document.createElement("span");
+          d.className = "dot";
+          d.textContent = "·";
+          var c = document.createElement("span");
+          c.textContent = w.composer;
+          kEl.append(g, d, c);
+        } else {
+          kEl.textContent = w.composer;
+        }
+        var stt = band.querySelector("#tea-title");
+        stt.textContent = w.title;
+        stt.title = w.title;
+        band.querySelector(".tea-sub").textContent = w.perf + (w.op ? " · " + w.op : "");
+        var a = band.querySelector(".tea-listen");
+        a.href = rec.url;
+        band.querySelector(".tea-again").addEventListener("click", pour);
+        if (!cache[key] || !rec.url) {
+          resolve(w, function (r) {
+            if (r.url) a.href = r.url;
+          });
+        }
+      }
+
+      function pour() {
+        if (!started) { seal.classList.add("started"); }
+        seal.classList.remove("is-pour");
+        void seal.offsetWidth;
+        seal.classList.add("is-pour");
+        if (!started) {
+          started = true;
+          wrap.classList.add("is-on");
+          var startH = wrap.offsetHeight;
+          render(pick());
+          if (!reduced) {
+            wrap.style.height = startH + "px";
+            var run = function () {
+              wrap.style.height = "auto";
+              var endH = wrap.getBoundingClientRect().height;
+              wrap.style.height = startH + "px";
+              void wrap.offsetWidth;
+              wrap.style.transition = "height .6s cubic-bezier(.2,.6,.3,1)";
+              requestAnimationFrame(function () {
+                wrap.style.height = endH + "px";
+              });
+              var onEnd = function (e) {
+                if (e.propertyName !== "height") return;
+                wrap.removeEventListener("transitionend", onEnd);
+                wrap.style.height = "auto";
+                wrap.style.transition = "";
+              };
+              wrap.addEventListener("transitionend", onEnd);
+            };
+            var ready =
+              document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+            var fired = false,
+              go = function () {
+                if (fired) return;
+                fired = true;
+                run();
+              };
+            ready.then(go);
+            setTimeout(go, 500);
+          }
+        } else {
+          render(pick());
+        }
+      }
+
+      seal.addEventListener("click", pour);
+      seal.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          pour();
+        }
+      });
+    }
+
+    if (!window.__teaBandBound) {
+      window.__teaBandBound = true;
+      document.addEventListener("astro:after-swap", setup);
+    }
+    setup();
+  })();
+</script>

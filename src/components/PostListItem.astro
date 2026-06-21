@@ -22,50 +22,62 @@ const { entry, centered = false, showCover = true } = Astro.props as {
 const cover = showCover ? entry.data.cover : undefined;
 const coverUrl = !showCover || cover ? undefined : getFirstImage(entry.body ?? "");
 
-// Two treatments: a centered, spacious "featured" feed (home page) and a
-// compact left-aligned index (archive, tags). Hierarchy is carried by size +
-// color + tracking, since the serif only renders at weights 400 / 700.
-const rootClass = centered
-  ? "not-prose group mx-auto block text-center"
-  : "not-prose group block";
-const dateClass = centered
-  ? "text-xs tracking-wide text-black/75 dark:text-white/60"
-  : "text-sm text-black/75 dark:text-white/60";
+// centered 现在表示「首页特写」变体：日期左侧成栏（月日一行、年份在下），
+// 排版照 home-rebuild-twocol.html 的 .post 网格（72px | 1fr）。
 const titleClass = centered
-  ? "mt-1.5 text-2xl leading-snug text-pretty text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] dark:text-white"
+  ? "text-2xl leading-snug text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] dark:text-white"
   : "mt-1 text-lg text-balance text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] dark:text-white";
 const imgClass = centered
-  ? "mx-auto mt-4 aspect-[3/2] w-full max-w-sm rounded-md border border-black/10 object-cover dark:border-white/10"
+  ? "mt-4 h-auto w-full max-w-[16rem] rounded-md border border-black/10 object-contain dark:border-white/10"
   : "mt-3 aspect-[3/2] w-full max-w-sm rounded-md border border-black/10 object-cover dark:border-white/10";
-// The centered title now spans the home's full (wider) column so it sits on one
-// line, but the excerpt stays held to a calm max-w-xl measure so multi-line
-// Chinese doesn't ragged out across the wide column.
 const descClass = centered
-  ? "mx-auto mt-3 line-clamp-2 max-w-xl text-pretty text-sm text-black/80 dark:text-white/70"
+  ? "mt-2.5 line-clamp-2 max-w-xl text-pretty text-sm leading-relaxed text-black/70 dark:text-white/65"
   : "mt-3 line-clamp-2 text-pretty text-sm text-black/80 dark:text-white/70";
+
+// 首页日期边栏：月日 + 年（取 UTC，避免日期型在时区下偏移一天）
+const d = entry.data.date;
+const md = `${d.getUTCMonth() + 1}月${d.getUTCDate()}日`;
+const yr = String(d.getUTCFullYear());
 ---
 
-<a href={`/${entry.collection}/${entry.id}`} class={rootClass}>
-  <div class={dateClass}>
-    <FormattedDate date={entry.data.date} />
-  </div>
-  <h3 class={titleClass}>
-    {entry.data.title}
-  </h3>
-  {
-    cover ? (
-      <Image
-        src={cover}
-        alt={entry.data.title}
-        width={768}
-        loading="lazy"
-        class={imgClass}
-      />
-    ) : coverUrl ? (
-      <img src={coverUrl} alt={entry.data.title} loading="lazy" class={imgClass} />
-    ) : null
-  }
-  <p class={descClass}>
-    {entry.data.description}
-  </p>
-</a>
+{
+  centered ? (
+    <a
+      href={`/${entry.collection}/${entry.id}`}
+      class="not-prose group grid grid-cols-[4.5rem_1fr] items-baseline gap-6"
+    >
+      <div class="pt-1.5 text-xs tracking-[0.04em] text-black/55 dark:text-white/55">
+        {md}
+        <span class="mt-0.5 block text-[0.7rem] tracking-[0.1em] text-black/40 dark:text-white/40">
+          {yr}
+        </span>
+      </div>
+      <div>
+        <h3 class={titleClass}>
+          <span class="bg-[linear-gradient(var(--accent),var(--accent))] bg-[length:0px_1px] bg-[position:0_1.12em] bg-no-repeat transition-[background-size] duration-300 ease-out group-hover:bg-[length:100%_1px] group-focus-visible:bg-[length:100%_1px]">
+            {entry.data.title}
+          </span>
+        </h3>
+        {cover ? (
+          <Image src={cover} alt={entry.data.title} width={768} loading="lazy" class={imgClass} />
+        ) : coverUrl ? (
+          <img src={coverUrl} alt={entry.data.title} loading="lazy" class={imgClass} />
+        ) : null}
+        <p class={descClass}>{entry.data.description}</p>
+      </div>
+    </a>
+  ) : (
+    <a href={`/${entry.collection}/${entry.id}`} class="not-prose group block">
+      <div class="text-sm text-black/75 dark:text-white/60">
+        <FormattedDate date={entry.data.date} />
+      </div>
+      <h3 class={titleClass}>{entry.data.title}</h3>
+      {cover ? (
+        <Image src={cover} alt={entry.data.title} width={768} loading="lazy" class={imgClass} />
+      ) : coverUrl ? (
+        <img src={coverUrl} alt={entry.data.title} loading="lazy" class={imgClass} />
+      ) : null}
+      <p class={descClass}>{entry.data.description}</p>
+    </a>
+  )
+}

@@ -6,7 +6,11 @@ import PostListItem from "@components/PostListItem.astro";
 import Link from "@components/Link.astro";
 import EntranceEpigraph from "@components/EntranceEpigraph.astro";
 import TeaSeal from "@components/TeaSeal.astro";
+import TeaPourBand from "@components/TeaPourBand.astro";
 import { getCollection } from "astro:content";
+// 若要启用「一帧」照片，取消下面两行注释并改成你的图片路径：
+// import { Image } from "astro:assets";
+// import frame from "../assets/frame.jpg";
 
 const blog = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
@@ -15,20 +19,56 @@ const blog = (await getCollection("blog"))
 ---
 
 <Layout title="" description={HOME.DESCRIPTION}>
-  <!-- Once-per-session entrance: the Keats epigraph plays as a full-screen
-       ink-reveal splash (EntranceEpigraph), so it no longer sits statically at
-       the top of the page. -->
   <EntranceEpigraph />
   <Container>
-    <aside data-pagefind-ignore class="mx-auto max-w-4xl text-center">
-      <h1 class="sr-only">喫茶去</h1>
-
-      <div class="space-y-20">
+    <h1 class="sr-only">喫茶去</h1>
+    <div class="home-grid">
+      <!-- 左栏脊柱：茶印 → 正在听 → 一帧 → 联系 -->
+      <aside class="home-rail animate" data-pagefind-ignore>
+        <!-- 茶印（触发器，组件未改动） -->
         <TeaSeal />
 
-        <section class="animate space-y-10">
-          <h2 class="font-semibold text-black dark:text-white">近期文章</h2>
-          <ul class="not-prose space-y-14">
+        <!-- 正在听（斟茶带）：点茶印后显墨揭示，未斟时折叠不占位 -->
+        <TeaPourBand />
+
+        <!-- 一帧：你拍的照片。
+             换成真实照片：在上方取消 Image/frame 两行 import 的注释，
+             把下面 .rail-photo 整块替换为：
+               <Image src={frame} alt="说明" width={640} class="rail-photo-img" />
+             暂不需要照片就把整个 <figure> 删掉。 -->
+        <figure class="rail-frame">
+          <h4 class="rail-label">一帧</h4>
+          <div class="rail-photo" role="img" aria-label="照片占位">
+            <svg viewBox="0 0 60 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rail-photo-icon">
+              <circle cx="30" cy="23" r="8" stroke-width="2"></circle>
+              <path stroke-width="2" d="M8 40 24 24 33 33 41 26 52 37"></path>
+              <circle cx="44" cy="14" r="3" stroke-width="2"></circle>
+            </svg>
+          </div>
+          <figcaption class="rail-frame-cap">镜头 · 京都 · 二〇二四</figcaption>
+        </figure>
+
+        <!-- 联系 -->
+        <div class="rail-contact">
+          <h4 class="rail-label">联系</h4>
+          {
+            SOCIALS.map((s) => (
+              <Link href={s.HREF} external aria-label={`${SITE.TITLE} on ${s.NAME}`}>
+                {s.NAME} ↗
+              </Link>
+            ))
+          }
+          <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.TITLE}`}>
+            {SITE.EMAIL}
+          </Link>
+        </div>
+      </aside>
+
+      <!-- 右栏：近期文章 -->
+      <div class="home-main">
+        <section class="animate">
+          <h2 class="home-eyebrow home-eyebrow--top">近期文章</h2>
+          <ul class="not-prose home-feed">
             {
               blog.map((post) => (
                 <li>
@@ -37,39 +77,127 @@ const blog = (await getCollection("blog"))
               ))
             }
           </ul>
-          <div>
-            <Link href="/blog">查看全部 →</Link>
-          </div>
-        </section>
-
-        <section class="animate space-y-4">
-          <h2 class="font-semibold text-black dark:text-white">联系</h2>
-          <ul class="not-prose flex flex-wrap justify-center gap-2">
-            {
-              SOCIALS.map((SOCIAL) => (
-                <li class="flex gap-x-2 text-nowrap">
-                  <Link
-                    href={SOCIAL.HREF}
-                    external
-                    aria-label={`${SITE.TITLE} on ${SOCIAL.NAME}`}
-                  >
-                    {SOCIAL.NAME}
-                  </Link>
-                  {"/"}
-                </li>
-              ))
-            }
-            <li class="line-clamp-1">
-              <Link
-                href={`mailto:${SITE.EMAIL}`}
-                aria-label={`Email ${SITE.TITLE}`}
-              >
-                {SITE.EMAIL}
-              </Link>
-            </li>
-          </ul>
+          <div class="mt-9"><Link href="/blog">查看全部 →</Link></div>
         </section>
       </div>
-    </aside>
+    </div>
   </Container>
 </Layout>
+
+<style is:global>
+  /* ===== 两栏：脊柱 + 一条贯穿全页的竖向细线 ===== */
+  .home-grid {
+    display: grid;
+    grid-template-columns: 268px 1fr;
+    gap: 0;
+    align-items: start;
+    padding-top: 4rem;
+  }
+  .home-rail {
+    position: sticky;
+    top: 6.5rem;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding-right: 3.25rem;
+  }
+  .home-main {
+    min-width: 0;
+    border-left: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+    padding-left: 3.25rem;
+  }
+
+  /* 脊柱里统一的小标题 */
+  .rail-label {
+    margin: 0 0 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    color: color-mix(in oklab, var(--text-strong, #353534) 40%, transparent);
+  }
+
+  /* 一帧 · 照片 */
+  .rail-frame {
+    margin: 2rem 0 0;
+    padding-top: 2rem;
+    border-top: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+  }
+  .rail-photo {
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    border: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
+    border-radius: 3px;
+    display: grid;
+    place-items: center;
+    color: color-mix(in oklab, var(--text-strong, #353534) 26%, var(--surface-page, #f6f5f1));
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--color-seal, #b1462f) 8%, var(--surface-page, #f6f5f1)),
+      color-mix(in oklab, var(--text-strong, #353534) 7%, var(--surface-page, #f6f5f1))
+    );
+    box-shadow: inset 0 0 0 5px var(--surface-page, #f6f5f1), 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  .rail-photo-icon { width: 38%; height: 38%; }
+  .rail-photo-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 3px;
+  }
+  .rail-frame-cap {
+    margin-top: 0.7rem;
+    font-family: var(--font-charter, "IM Fell English", Georgia, serif);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--text-quiet, #6b6a64);
+    letter-spacing: 0.02em;
+  }
+
+  /* 联系 */
+  .rail-contact {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+  }
+
+  /* 右栏「近期文章」眉标 + 一条与脊柱呼应的底线 */
+  .home-eyebrow {
+    margin: 0 0 1.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: color-mix(in oklab, var(--text-strong, #353534) 46%, transparent);
+  }
+  .home-eyebrow--top {
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
+  }
+  .home-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 2.4rem;
+    margin-top: 1.8rem;
+  }
+
+  @media (max-width: 760px) {
+    .home-grid {
+      grid-template-columns: 1fr;
+      gap: 2.25rem;
+      padding-top: 2rem;
+    }
+    .home-rail {
+      position: static;
+      padding-right: 0;
+    }
+    .home-main {
+      border-left: 0;
+      padding-left: 0;
+    }
+  }
+</style>
