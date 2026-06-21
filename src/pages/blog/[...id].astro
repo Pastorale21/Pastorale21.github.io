@@ -6,6 +6,7 @@ import { readingTime } from "@lib/utils";
 import BackToPrevious from "@components/BackToPrevious.astro";
 import PostNavigation from "@components/PostNavigation.astro";
 import TableOfContents from "@components/TableOfContents.astro";
+import ProseHighlighter from "@components/ProseHighlighter.astro";
 
 export async function getStaticPaths() {
   const posts = (await getCollection("blog"))
@@ -93,11 +94,14 @@ const hasToc = headings.length > 0;
         </div>
 
         <article class="animate mt-10">
-          <Content />
+          <div id="uh-article" data-uh-post={post.id}>
+            <Content />
+          </div>
           <div class="mt-24">
             <PostNavigation prevPost={prevPost} nextPost={nextPost} />
           </div>
         </article>
+        <ProseHighlighter />
       </div>
 
       {

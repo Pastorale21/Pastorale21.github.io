@@ -1,0 +1,539 @@
+---
+/**
+ * ProseHighlighter —— 朱笔批注
+ *
+ * 在正文里划词，浮出工具条：可把选区抹成茶色高亮（沿用全局 <mark> 样式），
+ * 也可附一条批注。高亮以「相对正文的字符偏移 [start,end)」存进 localStorage，
+ * 按 post.id 分键，刷新后重建。坐标取自 Range.toString().length —— <mark> 包裹
+ * 不改变字符流，所以多条高亮共用同一套稳定坐标。
+ *
+ * 配合 ClientRouter：脚本只绑定一次，setup() 在 astro:after-swap 时重跑，
+ * postId 从正文容器的 data 属性现读，避免翻页后用到过期的 build 期变量。
+ *
+ * 容器约定：正文外层须为 <div id="uh-article" data-uh-post={post.id}>…</div>
+ */
+---
+
+<script is:inline>
+  (function () {
+    if (typeof window === "undefined") return;
+
+    var STORE = "pastorale:marks:v1";
+    var ROOT_ID = "uh-article";
+    var bar = null; // 划词工具条
+    var pop = null; // 批注输入/查看气泡
+    var pending = null; // 待保存的选区信息
+
+    /* ---------- 存储 ---------- */
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(STORE) || "{}") || {};
+      } catch (e) {
+        return {};
+      }
+    }
+    function save(map) {
+      try {
+        localStorage.setItem(STORE, JSON.stringify(map));
+      } catch (e) {}
+    }
+    function listFor(postId) {
+      var m = load();
+      return Array.isArray(m[postId]) ? m[postId] : [];
+    }
+    function setList(postId, list) {
+      var m = load();
+      if (list.length) m[postId] = list;
+      else delete m[postId];
+      save(m);
+    }
+    function genId() {
+      return "h" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+    }
+
+    /* ---------- 偏移计算 ---------- */
+    // 选区边界 (node, offset) 相对 root 起点的字符数。
+    function offsetOf(root, node, off) {
+      var r = document.createRange();
+      r.setStart(root, 0);
+      r.setEnd(node, off);
+      return r.toString().length;
+    }
+    // root 下所有文本节点 + 各自的累计起始偏移（含已在 <mark> 内的，保持坐标一致）。
+    function textNodes(root) {
+      var out = [];
+      var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      var acc = 0;
+      var n;
+      while ((n = w.nextNode())) {
+        var len = n.nodeValue ? n.nodeValue.length : 0;
+        out.push({ node: n, start: acc, end: acc + len });
+        acc += len;
+      }
+      return out;
+    }
+    function inMark(node) {
+      var p = node.parentNode;
+      while (p && p !== document.body) {
+        if (p.nodeType === 1 && p.classList && p.classList.contains("uh-mark")) return true;
+        p = p.parentNode;
+      }
+      return false;
+    }
+
+    /* ---------- 应用 / 移除 ---------- */
+    function apply(root, h) {
+      var nodes = textNodes(root);
+      for (var i = 0; i < nodes.length; i++) {
+        var item = nodes[i];
+        var is = Math.max(h.start, item.start);
+        var ie = Math.min(h.end, item.end);
+        if (is >= ie) continue;
+        if (inMark(item.node)) continue;
+        wrap(item.node, is - item.start, ie - item.start, h);
+      }
+    }
+    function wrap(node, ls, le, h) {
+      var target = node;
+      if (ls > 0) target = target.splitText(ls);
+      if (le - ls < target.nodeValue.length) target.splitText(le - ls);
+      var mk = document.createElement("mark");
+      mk.className = "uh-mark" + (h.note ? " uh-noted" : "");
+      mk.setAttribute("data-uh-id", h.id);
+      if (h.note) mk.setAttribute("title", h.note);
+      target.parentNode.insertBefore(mk, target);
+      mk.appendChild(target);
+    }
+    function removeMark(root, id) {
+      var marks = root.querySelectorAll('mark.uh-mark[data-uh-id="' + id + '"]');
+      for (var i = 0; i < marks.length; i++) {
+        var mk = marks[i];
+        var parent = mk.parentNode;
+        while (mk.firstChild) parent.insertBefore(mk.firstChild, mk);
+        parent.removeChild(mk);
+      }
+      root.normalize();
+    }
+    function updateNoted(root, id, note) {
+      var marks = root.querySelectorAll('mark.uh-mark[data-uh-id="' + id + '"]');
+      for (var i = 0; i < marks.length; i++) {
+        if (note) {
+          marks[i].classList.add("uh-noted");
+          marks[i].setAttribute("title", note);
+        } else {
+          marks[i].classList.remove("uh-noted");
+          marks[i].removeAttribute("title");
+        }
+      }
+    }
+
+    /* ---------- 工具条 / 气泡 ---------- */
+    function makeBar() {
+      var el = document.createElement("div");
+      el.className = "uh-bar";
+      el.innerHTML =
+        '<button type="button" data-act="hl">高亮</button>' +
+        '<button type="button" data-act="note">批注</button>';
+      document.body.appendChild(el);
+      return el;
+    }
+    function makePop() {
+      var el = document.createElement("div");
+      el.className = "uh-pop";
+      document.body.appendChild(el);
+      return el;
+    }
+    function hideBar() {
+      if (bar) bar.classList.remove("is-on");
+    }
+    function hidePop() {
+      if (pop) pop.classList.remove("is-on");
+    }
+    function place(el, rect) {
+      // 固定定位，直接用视口坐标；优先放选区上方，空间不够则下方。
+      var w = el.offsetWidth || 120;
+      var h = el.offsetHeight || 36;
+      var top = rect.top - h - 8;
+      var below = false;
+      if (top < 8) {
+        top = rect.bottom + 8;
+        below = true;
+      }
+      var left = rect.left + rect.width / 2 - w / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+      el.style.top = top + "px";
+      el.style.left = left + "px";
+      el.classList.toggle("is-below", below);
+    }
+
+    function rectOfSelection() {
+      var sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null;
+      var r = sel.getRangeAt(0).getBoundingClientRect();
+      if (!r || (r.width === 0 && r.height === 0)) return null;
+      return r;
+    }
+
+    /* ---------- 主流程 ---------- */
+    function setup() {
+      var root = document.getElementById(ROOT_ID);
+      if (!root) return;
+      var postId = root.getAttribute("data-uh-post") || location.pathname;
+
+      // 重建已存高亮（坏数据不得拖垮正文）。
+      try {
+        var saved = listFor(postId);
+        for (var i = 0; i < saved.length; i++) {
+          if (typeof saved[i].start === "number" && saved[i].end > saved[i].start) {
+            apply(root, saved[i]);
+          }
+        }
+      } catch (e) {
+        if (window.console) console.warn("[ProseHighlighter] 重建跳过：", e);
+      }
+
+      if (!bar) bar = makeBar();
+      if (!pop) pop = makePop();
+
+      // 工具条动作（划词检测在全局 selectionchange 里，设置好 pending）
+      bar.onmousedown = function (e) {
+        e.preventDefault(); // 别让点击清掉选区
+      };
+      bar.onclick = function (e) {
+        var btn = e.target.closest("button");
+        if (!btn || !pending) return;
+        var act = btn.getAttribute("data-act");
+        var h = {
+          id: genId(),
+          start: pending.start,
+          end: pending.end,
+          text: pending.text.slice(0, 400),
+          note: "",
+        };
+        if (act === "hl") {
+          commit(root, postId, h);
+          hideBar();
+          window.getSelection().removeAllRanges();
+        } else if (act === "note") {
+          var rect = rectOfSelection();
+          commit(root, postId, h);
+          hideBar();
+          window.getSelection().removeAllRanges();
+          openNoteEditor(root, postId, h.id, "", rect);
+        }
+      };
+
+      // 点已有高亮 → 查看/编辑批注 + 移除
+      root.onclick = function (e) {
+        var mk = e.target.closest && e.target.closest("mark.uh-mark");
+        if (!mk) return;
+        var id = mk.getAttribute("data-uh-id");
+        var rec = find(postId, id);
+        openMarkMenu(root, postId, id, rec ? rec.note : "", mk.getBoundingClientRect());
+      };
+
+      window.__uhRoot = root;
+      window.__uhPost = postId;
+    }
+
+    function find(postId, id) {
+      var l = listFor(postId);
+      for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+      return null;
+    }
+    function commit(root, postId, h) {
+      apply(root, h);
+      var l = listFor(postId);
+      l.push(h);
+      setList(postId, l);
+    }
+
+    // 批注编辑气泡
+    function openNoteEditor(root, postId, id, value, rect) {
+      pop.innerHTML =
+        '<textarea class="uh-ta" placeholder="写下批注…" rows="3"></textarea>' +
+        '<div class="uh-row"><button type="button" data-act="cancel">取消</button>' +
+        '<button type="button" data-act="savenote" class="uh-primary">保存</button></div>';
+      var ta = pop.querySelector(".uh-ta");
+      ta.value = value || "";
+      pop.classList.add("is-on");
+      place(pop, rect || { top: 120, bottom: 140, left: 40, width: 0, height: 0 });
+      ta.focus();
+      pop.onmousedown = function (e) {
+        if (e.target.tagName !== "TEXTAREA") e.preventDefault();
+      };
+      pop.onclick = function (e) {
+        var btn = e.target.closest("button");
+        if (!btn) return;
+        var act = btn.getAttribute("data-act");
+        if (act === "cancel") {
+          hidePop();
+        } else if (act === "savenote") {
+          var note = ta.value.trim();
+          var l = listFor(postId);
+          for (var i = 0; i < l.length; i++) {
+            if (l[i].id === id) l[i].note = note;
+          }
+          setList(postId, l);
+          updateNoted(root, id, note);
+          hidePop();
+        }
+      };
+    }
+
+    // 点高亮后的小菜单：显示批注（若有）+ 编辑 + 移除
+    function openMarkMenu(root, postId, id, note, rect) {
+      var safe = (note || "").replace(/[&<>]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c];
+      });
+      pop.innerHTML =
+        (safe ? '<div class="uh-note-text">' + safe + "</div>" : "") +
+        '<div class="uh-row">' +
+        '<button type="button" data-act="edit">' + (note ? "编辑批注" : "加批注") + "</button>" +
+        '<button type="button" data-act="del" class="uh-danger">移除</button>' +
+        "</div>";
+      pop.classList.add("is-on");
+      place(pop, rect);
+      pop.onmousedown = function (e) {
+        e.preventDefault();
+      };
+      pop.onclick = function (e) {
+        var btn = e.target.closest("button");
+        if (!btn) return;
+        var act = btn.getAttribute("data-act");
+        if (act === "del") {
+          removeMark(root, id);
+          setList(postId, listFor(postId).filter(function (x) {
+            return x.id !== id;
+          }));
+          hidePop();
+        } else if (act === "edit") {
+          hidePop();
+          openNoteEditor(root, postId, id, note, rect);
+        }
+      };
+    }
+
+    /* ---------- 全局事件（只绑一次） ---------- */
+    function onDocDown(e) {
+      if (bar && bar.contains(e.target)) return;
+      if (pop && pop.contains(e.target)) return;
+      if (e.target.closest && e.target.closest("mark.uh-mark")) return;
+      hidePop();
+    }
+    if (!window.__uhBound) {
+      window.__uhBound = true;
+      document.addEventListener("selectionchange", function () {
+        // 防抖一拍，等浏览器把选区定下来
+        clearTimeout(window.__uhT);
+        window.__uhT = setTimeout(function () {
+          var root = document.getElementById(ROOT_ID);
+          if (!root || !bar) return;
+          var sel = window.getSelection();
+          if (!sel || sel.isCollapsed) {
+            if (!pop || !pop.classList.contains("is-on")) hideBar();
+            return;
+          }
+          // 复用 setup 内逻辑：通过合成一次轻量判断
+          if (sel.rangeCount === 0) return;
+          var rng = sel.getRangeAt(0);
+          if (!root.contains(rng.commonAncestorContainer)) {
+            hideBar();
+            return;
+          }
+          var text = sel.toString();
+          if (!text.trim()) {
+            hideBar();
+            return;
+          }
+          pending = {
+            start: offsetOf(root, rng.startContainer, rng.startOffset),
+            end: offsetOf(root, rng.endContainer, rng.endOffset),
+            text: text,
+          };
+          if (pending.start > pending.end) {
+            var t = pending.start;
+            pending.start = pending.end;
+            pending.end = t;
+          }
+          var r = rng.getBoundingClientRect();
+          if (!r || (r.width === 0 && r.height === 0)) {
+            hideBar();
+            return;
+          }
+          bar.classList.add("is-on");
+          place(bar, r);
+        }, 10);
+      });
+      document.addEventListener("mousedown", onDocDown, true);
+      window.addEventListener("scroll", function () {
+        hideBar();
+        hidePop();
+      }, true);
+      document.addEventListener("astro:after-swap", function () {
+        hideBar();
+        hidePop();
+        setup();
+      });
+    }
+
+    setup();
+  })();
+</script>
+
+<style is:global>
+  /* 朱笔批注 —— 工具条 / 气泡 / 高亮态。沿用全局 <mark> 的茶色底，
+     此处只补交互态：可点、有批注的高亮加一条赭红虚线。 */
+  mark.uh-mark {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  mark.uh-mark:hover {
+    background-color: color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  .dark mark.uh-mark:hover {
+    background-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+  mark.uh-mark.uh-noted {
+    border-bottom: 1.5px dotted var(--accent);
+  }
+
+  .uh-bar,
+  .uh-pop {
+    position: fixed;
+    z-index: 60;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    pointer-events: none;
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei",
+      sans-serif;
+  }
+  .uh-bar.is-on,
+  .uh-pop.is-on {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .uh-bar {
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    background: #fffdfb;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  }
+  .dark .uh-bar {
+    background: #1c1a19;
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+  .uh-bar button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 0.82rem;
+    line-height: 1;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .uh-bar button:hover {
+    background: color-mix(in oklab, var(--accent) 14%, transparent);
+    color: var(--accent);
+  }
+
+  .uh-pop {
+    width: 16rem;
+    max-width: calc(100vw - 1rem);
+    padding: 0.6rem;
+    border-radius: 0.6rem;
+    background: #fffdfb;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  }
+  .dark .uh-pop {
+    background: #1c1a19;
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  }
+  .uh-note-text {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: inherit;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .uh-ta {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    font: inherit;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: inherit;
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    margin-bottom: 0.5rem;
+  }
+  .dark .uh-ta {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .uh-ta:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .uh-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+  .uh-row button {
+    appearance: none;
+    font-size: 0.8rem;
+    line-height: 1;
+    padding: 0.4rem 0.7rem;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: transparent;
+    color: inherit;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .dark .uh-row button {
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+  .uh-row button:hover {
+    background: color-mix(in oklab, var(--accent) 10%, transparent);
+  }
+  .uh-row .uh-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .uh-row .uh-primary:hover {
+    background: color-mix(in oklab, var(--accent) 85%, black);
+  }
+  .uh-row .uh-danger:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .uh-bar,
+    .uh-pop {
+      transition: opacity 0.16s ease;
+      transform: none;
+    }
+  }
+</style>
