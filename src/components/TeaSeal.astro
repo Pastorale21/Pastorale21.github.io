@@ -27,6 +27,8 @@
     </g>
   </svg>
   <span class="ring"></span>
+  <span class="ripple"></span>
+  <span class="ripple ripple2"></span>
 </div>
 <div class="tea-seal-cap">喝一杯</div>
 
@@ -75,6 +77,24 @@
     100% { opacity: 0; }
   }
 
+  /* 悬停 · 朱砂涟漪：印底向外一圈圈晕开（持续，鼠标移开即止）。
+     用一组专属的 .ripple，与点击的一次性 .ring 涟漪互不干扰。 */
+  .tea-seal .ripple {
+    position: absolute;
+    inset: -7px;
+    border-radius: 24%;
+    border: 1px solid var(--accent, #b1462f);
+    opacity: 0;
+    transform: scale(0.84);
+    pointer-events: none;
+  }
+  .tea-seal:hover .ripple { animation: tea-hover-ripple 1.9s ease-out infinite; }
+  .tea-seal:hover .ripple2 { animation-delay: 0.95s; }
+  @keyframes tea-hover-ripple {
+    0% { opacity: 0.5; transform: scale(0.84); }
+    100% { opacity: 0; transform: scale(1.52); }
+  }
+
   /* 落印手势：每次斟茶按一下并微侧（一次性） */
   .tea-seal.is-pour { animation: ts-stamp 0.34s cubic-bezier(0.3, 0.8, 0.3, 1); }
   @keyframes ts-stamp {
@@ -113,6 +133,7 @@
     .tea-seal.is-pour,
     .tea-seal.is-pour .ring,
     .tea-seal.is-pour .steam path,
+    .tea-seal:hover .ripple,
     .tea-seal:not(.started),
     .tea-seal:not(.started) .steam path { animation: none !important; }
   }
