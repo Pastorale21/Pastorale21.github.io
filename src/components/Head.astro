@@ -112,6 +112,19 @@ const { title, description, image } = Astro.props;
       updateThemeButtons();
     });
 
+    // 右上角黑白单键切换（stephango 式）。header 带 transition:persist，
+    // init() 每次换页都会重跑，用 dataset 守卫避免对同一持久按钮重复绑定。
+    const themeToggle = document.getElementById("theme-toggle");
+    if (themeToggle && !themeToggle.dataset.bound) {
+      themeToggle.dataset.bound = "1";
+      themeToggle.addEventListener("click", () => {
+        const willBeDark = !document.documentElement.classList.contains("dark");
+        localStorage.setItem("theme", willBeDark ? "dark" : "light");
+        toggleTheme(willBeDark);
+        updateThemeButtons();
+      });
+    }
+
     window
       .matchMedia("(prefers-color-scheme: dark)")
       .addEventListener("change", (event) => {
@@ -201,8 +214,11 @@ const { title, description, image } = Astro.props;
 
     if (userTheme === "light" || userTheme === "dark") {
       toggleTheme(userTheme === "dark");
-    } else {
+    } else if (userTheme === "system") {
       toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    } else {
+      // 默认进入为白天模式（未设置时不再跟随系统）
+      toggleTheme(false);
     }
   }
 

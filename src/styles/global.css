@@ -43,14 +43,14 @@
   --font-charter: 'IM Fell English', 'Charter', Georgia, ui-serif, Cambria,
     'Noto Serif SC', 'Songti SC', serif;
 
-  /* 喫茶去 palette — matched to Maggie Appleton's: cream ground + soft warm
-     charcoal text (not near-black, so it never reads heavy), warm coral accent. */
-  --color-black: oklch(38% 0.004 90); /* #353534 soft warm charcoal: text */
+  /* 喫茶去 palette — surfaces adopt Steph Ango's Flexoki 底色 (stephango.com):
+     warm "paper" in light, near-black "black" in dark. Text stays the soft warm
+     charcoal / warm off-white so it never reads heavy. */
+  --color-black: #1f1d1b; /* near-Flexoki warm ink: text */
   --color-white: oklch(90% 0.01 88); /* warm off-white: dark-mode text (softened
     from pure white so it doesn't glare on the dark ground) */
-  --color-neutral-100: oklch(96.8% 0.005 95); /* #f6f5f1 cream: light surface */
-  --color-neutral-900: oklch(24% 0.016 72); /* warm charcoal: dark surface
-    (lifted off near-black + a touch warmer, like ink on dark paper) */
+  --color-neutral-100: #fffcf0; /* Flexoki paper: light surface */
+  --color-neutral-900: #100f0f; /* Flexoki black: dark surface */
 
   /* 茶印印底专用——比 accent 提亮一档，块面填充时更透气，不发暗。--accent 保持
      不变（交互/强调语义）；深色模式在 .dark 里另给中明度值，见下。 */

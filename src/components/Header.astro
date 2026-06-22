@@ -23,16 +23,32 @@ const navLink =
           {SITE.TITLE}
         </div>
       </Link>
-      <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-base tracking-[0.08em]">
-        {CATEGORIES.map((category) => (
-          <a href={category.HREF} class={navLink}>
-            {category.LABEL}
-          </a>
-        ))}
-        <span aria-hidden="true" class="h-3.5 w-px bg-black/15 dark:bg-white/20"></span>
-        <a href="/blog" class={navLink}>文章</a>
-        <a href="/tags" class={navLink}>标签</a>
-      </nav>
+      <div class="flex items-center gap-x-4">
+        <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-base tracking-[0.08em]">
+          {CATEGORIES.map((category) => (
+            <a href={category.HREF} class={navLink}>
+              {category.LABEL}
+            </a>
+          ))}
+          <span aria-hidden="true" class="h-3.5 w-px"></span>
+          <a href="/blog" class={navLink}>文章</a>
+          <a href="/tags" class={navLink}>标签</a>
+        </nav>
+        <button
+          id="theme-toggle"
+          type="button"
+          aria-label="切换深色/浅色"
+          class="grid size-8 shrink-0 place-content-center rounded-full border border-black/15 text-current transition-colors duration-300 ease-in-out hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/5"
+        >
+          <svg class="size-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"></circle>
+            <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8"></path>
+          </svg>
+          <svg class="hidden size-4 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </header>
