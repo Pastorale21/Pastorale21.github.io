@@ -1,6 +1,6 @@
 ---
 import Link from "@components/Link.astro";
-import { CATEGORIES, SITE } from "@consts";
+import { SITE } from "@consts";
 
 // Underline-free nav links; hover/focus shifts to the terracotta accent so
 // there's still clear feedback without the underline.
@@ -25,12 +25,6 @@ const navLink =
       </Link>
       <div class="flex items-center gap-x-4">
         <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-base tracking-[0.08em]">
-          {CATEGORIES.map((category) => (
-            <a href={category.HREF} class={navLink}>
-              {category.LABEL}
-            </a>
-          ))}
-          <span aria-hidden="true" class="h-3.5 w-px"></span>
           <a href="/blog" class={navLink}>文章</a>
           <a href="/tags" class={navLink}>标签</a>
         </nav>

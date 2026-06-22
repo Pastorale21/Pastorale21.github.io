@@ -192,7 +192,7 @@
   }
 
   main {
-    @apply flex-1 pt-16 pb-32;
+    @apply flex-1 pt-24 pb-32;
   }
 
   footer {
