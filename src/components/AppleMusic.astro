@@ -1,0 +1,34 @@
+---
+// Embed an Apple Music album/track player. Centered, full-width up to the
+// player's natural max, with the same vertical rhythm as inline figures.
+// Usage: <AppleMusic src="https://embed.music.apple.com/.../id" />
+interface Props {
+  src: string;
+  height?: number;
+  title?: string;
+}
+const { src, height = 450, title = "Apple Music 播放器" } = Astro.props;
+---
+
+<iframe
+  class="apple-music"
+  src={src}
+  title={title}
+  height={height}
+  allow="autoplay *; encrypted-media *;"
+  frameborder="0"
+  loading="lazy"
+  sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+></iframe>
+
+<style>
+  .apple-music {
+    display: block;
+    width: 100%;
+    max-width: 660px;
+    margin: 1.5rem auto;
+    overflow: hidden;
+    background: transparent;
+    border-radius: 0.5rem;
+  }
+</style>
