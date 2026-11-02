@@ -195,6 +195,11 @@
     @apply flex-1 pt-24 pb-32;
   }
 
+  /* 页面自带报头（如首页）时没有固定 Header，顶部留白收小 */
+  main.no-fixed-header {
+    @apply pt-10;
+  }
+
   footer {
     @apply py-6 text-sm;
   }

@@ -1,58 +1,114 @@
 ---
+// blog/index.astro — 归档页 · 书的目录（设计稿 6b）
+// 按年分组，条目用引导点连到日期；页尾附「影集」一节（卷目也入目录）。
+// 替换原来的按月双栏归档。
 import { getCollection } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
-import FormattedDate from "@components/FormattedDate.astro";
 import { BLOG } from "@consts";
 
-const data = (await getCollection("blog"))
-  .filter((post) => !post.data.draft)
+const posts = (await getCollection("blog"))
+  .filter((p) => !p.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-// Fogdog-style archive: group by month (newest first). Each month is a
-// borderless block — heading + title/date entries, no excerpt, no cover —
-// that flows through CSS columns without ever splitting mid-month.
-type Group = { key: string; label: string; posts: typeof data };
+const albums = (await getCollection("albums"))
+  .filter((a) => !a.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const groups = data.reduce<Group[]>((acc, post) => {
-  const d = post.data.date;
-  const key = `${d.getFullYear()}-${d.getMonth()}`;
-  let group = acc.find((g) => g.key === key);
-  if (!group) {
-    group = { key, label: `${d.getFullYear()}年${d.getMonth() + 1}月`, posts: [] };
-    acc.push(group);
-  }
-  group.posts.push(post);
+type Group = { year: number; posts: typeof posts };
+const groups = posts.reduce<Group[]>((acc, post) => {
+  const y = post.data.date.getUTCFullYear();
+  let g = acc.find((x) => x.year === y);
+  if (!g) acc.push((g = { year: y, posts: [] }));
+  g.posts.push(post);
   return acc;
 }, []);
+
+const fmt = (d: Date) => `${d.getUTCMonth() + 1}月${d.getUTCDate()}日`;
+const fmtM = (d: Date) => `${d.getUTCMonth() + 1}月`;
+const albumKicker = (a: (typeof albums)[number]) =>
+  a.data.kind === "roll"
+    ? [a.data.roll, a.data.film].filter(Boolean).join(" · ")
+    : a.data.kind === "theme"
+      ? "主题"
+      : "散拍";
 ---
 
 <Layout title={BLOG.TITLE} description={BLOG.DESCRIPTION}>
   <Container>
-    <div data-pagefind-ignore>
-      <div class="columns-1 gap-x-12 sm:columns-2">
-        {
-          groups.map((group) => (
-            <section class="animate mb-14 break-inside-avoid">
-              <h2 class="text-2xl text-black dark:text-white">{group.label}</h2>
-              <ul class="not-prose mt-6 space-y-8">
-                {group.posts.map((post) => (
-                  <li>
-                    <a href={`/${post.collection}/${post.id}`} class="group block">
-                      <h3 class="text-balance text-lg leading-snug text-black transition-colors duration-300 ease-in-out group-hover:text-[var(--accent)] group-focus-visible:text-[var(--accent)] dark:text-white">
-                        {post.data.title}
-                      </h3>
-                      <div class="mt-1 text-sm text-black/75 dark:text-white/60">
-                        <FormattedDate date={post.data.date} />
-                      </div>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))
-        }
-      </div>
+    <div class="toc" data-pagefind-ignore>
+      {
+        groups.map((g) => (
+          <section class="toc-section animate">
+            <h2 class="toc-year">{g.year}</h2>
+            <div class="toc-list">
+              {g.posts.map((post) => (
+                <a class="toc-row" href={`/${post.collection}/${post.id}`}>
+                  <span class="toc-title">{post.data.title}</span>
+                  <span class="toc-leader" aria-hidden="true"></span>
+                  <span class="toc-date">{fmt(post.data.date)}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+
+      {
+        albums.length > 0 && (
+          <section class="toc-section animate">
+            <h2 class="toc-year toc-year--album">影集</h2>
+            <div class="toc-list">
+              {albums.map((a) => (
+                <a class="toc-row" href={`/album/${a.id}`}>
+                  <span class="toc-title">
+                    {a.data.title}
+                    <span class="toc-sub">{albumKicker(a)} · {a.data.photos.length} 张</span>
+                  </span>
+                  <span class="toc-leader" aria-hidden="true"></span>
+                  <span class="toc-date">{fmtM(a.data.date)}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      <div aria-hidden="true" class="toc-dinkus">⁂</div>
     </div>
   </Container>
 </Layout>
+
+<style is:global>
+  .toc { max-width: 40rem; margin: 0 auto; }
+  .toc-section { margin-top: 3rem; }
+  .toc-section:first-of-type { margin-top: 0; }
+  .toc-year {
+    margin: 0 0 1.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--text-quiet, #6b6a64);
+  }
+  .toc-year--album { color: var(--accent, #b1462f); }
+  .toc-list { display: flex; flex-direction: column; gap: 1.1rem; }
+  .toc-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--text-strong, #353534);
+    transition: color 0.3s ease-in-out;
+  }
+  .toc-row:hover { color: var(--accent, #b1462f); }
+  .toc-title { font-size: 1rem; line-height: 1.7; flex: none; max-width: 75%; text-wrap: balance; }
+  .toc-sub { font-size: 0.78rem; color: var(--text-quiet, #6b6a64); margin-left: 0.5em; }
+  .toc-leader {
+    flex: 1;
+    border-bottom: 1px dotted color-mix(in oklab, var(--text-strong, #353534) 25%, transparent);
+    transform: translateY(-4px);
+    min-width: 1.5rem;
+  }
+  .toc-date { flex: none; font-size: 0.8rem; color: var(--text-quiet, #6b6a64); }
+  .toc-dinkus { text-align: center; margin: 4.5rem 0 1rem; color: var(--text-quiet, #6b6a64); }
+</style>

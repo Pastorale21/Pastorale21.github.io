@@ -1,200 +1,364 @@
 ---
+// index.astro — 首页 · 文人报纸头版（设计稿 6a）
+// 报头（副题 · 喫茶去大字 · 日期 + 社印）→ 粗规线 → 报眉导航（文章/影集/标签 + 深浅切换）
+// → 正在听（斟茶后横排展开）→ 头条（封面不裁切，只缩小）→ 三小 → 影集印样通栏。
+// 首页关掉全局固定 Header（Layout header={false}），报头即门面，不放网站 icon。
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
-import { SITE, HOME, SOCIALS } from "@consts";
-import PostListItem from "@components/PostListItem.astro";
 import Link from "@components/Link.astro";
-import EntranceEpigraph from "@components/EntranceEpigraph.astro";
 import TeaSeal from "@components/TeaSeal.astro";
 import TeaPourBand from "@components/TeaPourBand.astro";
+import { Image } from "astro:assets";
+import { SITE, HOME } from "@consts";
+import { getFirstImage } from "@lib/utils";
 import { getCollection } from "astro:content";
-// 若要启用「一帧」照片，取消下面两行注释并改成你的图片路径：
-// import { Image } from "astro:assets";
-// import frame from "../assets/frame.jpg";
 
 const blog = (await getCollection("blog"))
-  .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, SITE.NUM_POSTS_ON_HOMEPAGE);
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const [lead, ...rest] = blog;
+const secondary = rest.slice(0, 3);
+
+const albums = (await getCollection("albums"))
+  .filter((a) => !a.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const latest = albums[0];
+
+const leadCoverUrl = lead && !lead.data.cover ? getFirstImage(lead.body ?? "") : undefined;
+
+const fmt = (d: Date) => `${d.getUTCMonth() + 1}月${d.getUTCDate()}日`;
+const fmtY = (d: Date) => String(d.getUTCFullYear());
+const now = new Date();
+const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+const dateLine = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · 星期${weekdays[now.getDay()]}`;
 ---
 
-<Layout title="" description={HOME.DESCRIPTION}>
-  <EntranceEpigraph />
+<Layout title="" description={HOME.DESCRIPTION} header={false}>
   <Container>
-    <h1 class="sr-only">喫茶去</h1>
-    <div class="home-grid">
-      <!-- 左栏脊柱：茶印 → 正在听 → 一帧 → 联系 -->
-      <aside class="home-rail animate" data-pagefind-ignore>
-        <!-- 茶印（触发器，组件未改动） -->
+    <!-- 报头：大字居中 · 日期 + 社印靠右 -->
+    <div class="mast animate" data-pagefind-ignore>
+      <h1 class="mast-title">{SITE.TITLE}</h1>
+      <div class="mast-right">
+        <span class="mast-date">{dateLine}</span>
         <TeaSeal />
-
-        <!-- 正在听（斟茶带）：点茶印后显墨揭示，未斟时折叠不占位 -->
-        <TeaPourBand />
-
-        <!-- 一帧：你拍的照片。
-             换成真实照片：在上方取消 Image/frame 两行 import 的注释，
-             把下面 .rail-photo 整块替换为：
-               <Image src={frame} alt="说明" width={640} class="rail-photo-img" />
-             暂不需要照片就把整个 <figure> 删掉。 -->
-        <figure class="rail-frame">
-          <h4 class="rail-label">一帧</h4>
-          <div class="rail-photo" role="img" aria-label="照片占位">
-            <svg viewBox="0 0 60 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rail-photo-icon">
-              <circle cx="30" cy="23" r="8" stroke-width="2"></circle>
-              <path stroke-width="2" d="M8 40 24 24 33 33 41 26 52 37"></path>
-              <circle cx="44" cy="14" r="3" stroke-width="2"></circle>
-            </svg>
-          </div>
-          <figcaption class="rail-frame-cap">镜头 · 京都 · 二〇二四</figcaption>
-        </figure>
-
-        <!-- 联系 -->
-        <div class="rail-contact">
-          <h4 class="rail-label">联系</h4>
-          {
-            SOCIALS.map((s) => (
-              <Link href={s.HREF} external aria-label={`${SITE.TITLE} on ${s.NAME}`}>
-                {s.NAME} ↗
-              </Link>
-            ))
-          }
-          <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.TITLE}`}>
-            {SITE.EMAIL}
-          </Link>
-        </div>
-      </aside>
-
-      <!-- 右栏：近期文章 -->
-      <div class="home-main">
-        <section class="animate">
-          <h2 class="home-eyebrow home-eyebrow--top">近期文章</h2>
-          <ul class="not-prose home-feed">
-            {
-              blog.map((post) => (
-                <li>
-                  <PostListItem entry={post} centered />
-                </li>
-              ))
-            }
-          </ul>
-          <div class="mt-9"><Link href="/blog">查看全部 →</Link></div>
-        </section>
       </div>
     </div>
+    <div class="mast-rule"></div>
+
+    <!-- 报眉导航：全局 Header 在首页关掉，导航融进报头下这一行 -->
+    <div class="mast-nav animate">
+      <nav class="mast-links" aria-label="站内导航">
+        <a href="/blog">文章</a>
+        <a href="/album">影集</a>
+        <a href="/tags">标签</a>
+      </nav>
+    </div>
+
+    <!-- 正在听：点社印后在报眉下横排展开 -->
+    <TeaPourBand />
+
+    <!-- 头条 -->
+    {
+      lead && (
+        <article class="lead animate">
+          <div class="lead-body">
+            <span class="eyebrow">{fmt(lead.data.date)} · {fmtY(lead.data.date)}</span>
+            <a class="lead-title" href={`/${lead.collection}/${lead.id}`}><span class="hover-ink">{lead.data.title}</span></a>
+            <p class="lead-desc">{lead.data.description}</p>
+            <Link href={`/${lead.collection}/${lead.id}`}>读全文 →</Link>
+          </div>
+          {lead.data.cover || leadCoverUrl ? (
+            <div class="lead-cover-wrap">
+              {lead.data.cover ? (
+                <Image src={lead.data.cover} alt={lead.data.title} width={768} loading="eager" class="lead-cover" />
+              ) : (
+                <img src={leadCoverUrl} alt={lead.data.title} loading="eager" class="lead-cover" />
+              )}
+            </div>
+          ) : null}
+        </article>
+      )
+    }
+
+    <!-- 三小 -->
+    <div class="briefs animate">
+      {
+        secondary.map((post) => (
+          <article class="brief">
+            <span class="eyebrow">{fmt(post.data.date)} · {fmtY(post.data.date)}</span>
+            <a class="brief-title" href={`/${post.collection}/${post.id}`}><span class="hover-ink">{post.data.title}</span></a>
+            <p class="brief-desc">{post.data.description}</p>
+          </article>
+        ))
+      }
+    </div>
+
+    <!-- 影集印样通栏 -->
+    {
+      latest && (
+        <div class="roll-band animate" data-pagefind-ignore>
+          <div class="roll-band-head">
+            <span class="roll-kicker">
+              影集 · 最近一{latest.data.kind === "roll" ? "卷" : "贴"}
+              {latest.data.kind === "roll" && latest.data.roll ? ` · ${latest.data.roll}` : ""}
+              {latest.data.film ? ` · ${latest.data.film}` : ""}
+            </span>
+            <Link href="/album">全部 →</Link>
+          </div>
+          <a class="roll-strip" href={`/album/${latest.id}`}>
+            {latest.data.photos.slice(0, 4).map((p) => (
+              <Image src={p.src} alt={p.alt} width={480} loading="lazy" class="roll-strip-img" />
+            ))}
+            <span class="roll-strip-more">{latest.data.title} →</span>
+          </a>
+        </div>
+      )
+    }
   </Container>
 </Layout>
 
 <style is:global>
-  /* ===== 两栏：脊柱 + 一条贯穿全页的竖向细线 ===== */
-  .home-grid {
+  /* ===== 报头 ===== */
+  .mast {
     display: grid;
-    grid-template-columns: 268px 1fr;
-    gap: 0;
-    align-items: start;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
   }
-  .home-rail {
-    position: sticky;
-    top: 6.5rem;
+  .mast-title {
+    grid-column: 2;
+    margin: 0;
+    font-family: var(--font-display, ui-serif, Georgia, serif);
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-indent: 0.24em; /* 视觉居中：抵消末字间距 */
+    color: var(--text-strong, #353534);
+    text-align: center;
+  }
+  .mast-right {
+    grid-column: 3;
     display: flex;
-    flex-direction: column;
-    text-align: left;
-    padding-right: 3.25rem;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.9rem;
   }
-  .home-main {
-    min-width: 0;
-    border-left: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
-    padding-left: 3.25rem;
+  .mast-date {
+    /* 数字用 Charter（XCharter）的 oldstyle 字形，与正文里的 BWV 数字一致，
+       不落到系统无衬线。中文走栈里的 Noto Serif SC。 */
+    font-family: var(--font-sans);
+    font-variant-numeric: oldstyle-nums;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: var(--text-quiet, #6b6a64);
+  }
+  /* 社印：报头里的茶印缩小、隐藏「喝一杯」题签 */
+  .mast .tea-seal { width: 2.6rem; height: 2.6rem; }
+  .mast .tea-seal-cap { display: none; }
+  .mast-rule {
+    border-top: 2px solid var(--text-strong, #353534);
+    margin-bottom: 0;
   }
 
-  /* 脊柱里统一的小标题 */
-  .rail-label {
-    margin: 0 0 0.85rem;
+  /* 报眉导航：居中链接 */
+  .mast-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
+  }
+  .mast-links {
+    display: flex;
+    gap: 2.5rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+    font-family: var(--font-display, ui-serif, Georgia, serif);
+  }
+  .mast-links a {
+    color: var(--text-body, #4a4944);
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+  }
+  .mast-links a:hover { color: var(--accent, #b1462f); }
+
+  /* 正在听：报眉下的横排带（覆盖 TeaPourBand 的竖排样式） */
+  .tea-band-wrap.is-on {
+    margin-top: 0;
+    padding: 0.9rem 0;
+    border-top: 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
+  }
+  /* 分三行：正在听 → 曲目信息（可自然换行）→ 操作 */
+  .tea-band-fill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  .tea-band-fill .tea-band-label { margin: 0; }
+  .tea-band-fill .tea-info {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.4rem 1rem;
+  }
+  .tea-band-fill .tea-actions { flex-direction: row; align-items: baseline; margin-top: 0.15rem; gap: 1.1rem; }
+
+  /* 悬停朱线：旧首页 PostListItem 的招牌效果——一条 accent 色 1px 线
+     从左往右展开（背景渐变宽度 0 → 100%），配合标题变色。 */
+  .hover-ink {
+    background-image: linear-gradient(var(--accent, #b1462f), var(--accent, #b1462f));
+    background-repeat: no-repeat;
+    background-position: 0 1.12em;
+    background-size: 0 1px;
+    transition: background-size 0.3s ease-out;
+  }
+  a:hover .hover-ink,
+  a:focus-visible .hover-ink {
+    background-size: 100% 1px;
+  }
+
+  /* ===== 头条 ===== */
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--text-quiet, #6b6a64);
+  }
+  .lead {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 2.5rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
+  }
+  .lead-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .lead-title {
+    font-size: 1.9rem;
+    line-height: 1.45;
+    /* 头条是 <article>，吃到全局 prose，其标题层会改数字渲染，使 BWV 数字
+       落到系统无衬线。这里显式钉回 Charter 字体栈 + oldstyle 数字，与三小
+       标题及正文一致。字重保持 400（Charter Text 只有 400/700 两档）。 */
+    font-family: var(--font-sans);
+    font-variant-numeric: oldstyle-nums;
+    font-weight: 400;
+    color: var(--text-strong, #353534);
+    text-decoration: none;
+    text-wrap: balance;
+    transition: color 0.3s ease-in-out;
+  }
+  .lead-title:hover { color: var(--accent, #b1462f); }
+  .lead-desc {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--text-muted, #5a5852);
+    column-count: 2;
+    column-gap: 2rem;
+  }
+  /* 封面不裁切、与左侧文字块等高：外层随格子行拉伸定高，
+     图片在其中按原比例缩放（height 100%、宽度自适应），靠右对齐 */
+  .lead-cover-wrap { position: relative; min-width: 0; }
+  .lead-cover {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: top right;
+    border: 1px solid color-mix(in oklab, var(--text-strong, #353534) 10%, transparent);
+    border-radius: 0.375rem;
+  }
+
+  /* ===== 三小 ===== */
+  .briefs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
+  }
+  .brief { min-width: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .brief-title {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text-strong, #353534);
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+  }
+  .brief-title:hover { color: var(--accent, #b1462f); }
+  .brief-desc {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.85;
+    color: var(--text-muted, #5a5852);
+  }
+
+  /* ===== 影集通栏 ===== */
+  .roll-band { padding-top: 2rem; }
+  .roll-band-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .roll-kicker {
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.26em;
-    color: color-mix(in oklab, var(--text-strong, #353534) 40%, transparent);
+    color: var(--accent, #b1462f);
   }
-
-  /* 一帧 · 照片 */
-  .rail-frame {
-    margin: 2rem 0 0;
-    padding-top: 2rem;
-    border-top: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+  .roll-strip {
+    display: flex;
+    gap: 0.75rem;
+    height: 130px;
+    overflow: hidden;
+    text-decoration: none;
   }
-  .rail-photo {
-    aspect-ratio: 4 / 5;
-    width: 100%;
-    border: 1px solid color-mix(in oklab, var(--text-strong, #353534) 12%, transparent);
-    border-radius: 3px;
+  .roll-strip-img {
+    flex: none;
+    height: 100%;
+    width: auto;
+    display: block;
+    border: 1px solid color-mix(in oklab, var(--text-strong, #353534) 10%, transparent);
+    border-radius: 0.375rem;
+  }
+  .roll-strip-more {
+    flex: 1 1 80px;
+    min-width: 0;
+    border: 1px solid color-mix(in oklab, var(--text-strong, #353534) 10%, transparent);
+    border-radius: 0.375rem;
     display: grid;
     place-items: center;
-    color: color-mix(in oklab, var(--text-strong, #353534) 26%, var(--surface-page, #f6f5f1));
-    background: linear-gradient(
-      135deg,
-      color-mix(in oklab, var(--color-seal, #b1462f) 8%, var(--surface-page, #f6f5f1)),
-      color-mix(in oklab, var(--text-strong, #353534) 7%, var(--surface-page, #f6f5f1))
-    );
-    box-shadow: inset 0 0 0 5px var(--surface-page, #f6f5f1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    color: var(--text-body, #4a4944);
+    transition: color 0.3s ease-in-out;
+    text-align: center;
+    padding: 0 0.5rem;
   }
-  .rail-photo-icon { width: 38%; height: 38%; }
-  .rail-photo-img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 5;
-    object-fit: cover;
-    border-radius: 3px;
-  }
-  .rail-frame-cap {
-    margin-top: 0.7rem;
-    font-family: var(--font-charter, "IM Fell English", Georgia, serif);
-    font-style: italic;
-    font-size: 0.8rem;
-    color: var(--text-quiet, #6b6a64);
-    letter-spacing: 0.02em;
-  }
-
-  /* 联系 */
-  .rail-contact {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    font-size: 0.85rem;
-    letter-spacing: 0.04em;
-  }
-
-  /* 右栏「近期文章」眉标 + 一条与脊柱呼应的底线 */
-  .home-eyebrow {
-    margin: 0 0 1.4rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    color: color-mix(in oklab, var(--text-strong, #353534) 46%, transparent);
-  }
-  .home-eyebrow--top {
-    padding-bottom: 1.4rem;
-  }
-  .home-feed {
-    display: flex;
-    flex-direction: column;
-    gap: 2.4rem;
-    margin-top: 1.8rem;
-  }
+  .roll-strip:hover .roll-strip-more { color: var(--accent, #b1462f); }
 
   @media (max-width: 760px) {
-    .home-grid {
-      grid-template-columns: 1fr;
-      gap: 2.25rem;
-    }
-    .home-rail {
-      position: static;
-      padding-right: 0;
-    }
-    .home-main {
-      border-left: 0;
-      padding-left: 0;
-    }
+    .mast { grid-template-columns: 1fr; justify-items: center; row-gap: 0.6rem; }
+    .mast-right { justify-content: center; }
+    .mast-links { gap: 1.75rem; }
+    .lead { grid-template-columns: 1fr; }
+    .lead-desc { column-count: 1; }
+    /* 竖排堆叠时没有可参照的行高，封面回到常规文档流原比例缩放 */
+    .lead-cover { position: static; width: 100%; height: auto; max-height: none; }
+    .briefs { grid-template-columns: 1fr; gap: 1.75rem; }
   }
 </style>

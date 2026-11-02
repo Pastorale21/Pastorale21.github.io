@@ -6,9 +6,11 @@ import Footer from "@components/Footer.astro";
 type Props = {
   title: string;
   description: string;
+  /** 首页自带报头（含导航），传 false 关掉全局固定 Header */
+  header?: boolean;
 };
 
-const { title, description } = Astro.props;
+const { title, description, header = true } = Astro.props;
 
 // Brand-only tab on the home page (empty title); "Page · Brand" everywhere else.
 const docTitle = title ? `${title} · Pastorale's Blog` : "Pastorale's Blog";
@@ -20,8 +22,8 @@ const docTitle = title ? `${title} · Pastorale's Blog` : "Pastorale's Blog";
     <Head title={docTitle} description={description} />
   </head>
   <body>
-    <Header />
-    <main>
+    {header && <Header />}
+    <main class:list={[{ "no-fixed-header": !header }]}>
       <slot />
     </main>
     <Footer />

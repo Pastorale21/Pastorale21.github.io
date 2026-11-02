@@ -1,0 +1,158 @@
+---
+// album/[...id].astro — 贴内页（设计稿 2b · 长卷不裁切）
+// 卷头（眉标 + 题 + 一句话）→ 照片单列：横图通栏、相邻竖图并排成对、
+// 落单竖图限高居中，全程不裁一刀 → 上一贴/下一贴。
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import Link from "@components/Link.astro";
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const albums = (await getCollection("albums"))
+    .filter((a) => !a.data.draft)
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  return albums.map((album, i) => ({
+    params: { id: album.id },
+    props: {
+      album,
+      newer: albums[i - 1] ?? null,
+      older: albums[i + 1] ?? null,
+    },
+  }));
+}
+
+const { album, newer, older } = Astro.props;
+const d = album.data;
+
+const fmt = (dt: Date) => `${dt.getUTCMonth() + 1}月${dt.getUTCDate()}日`;
+const kicker =
+  d.kind === "roll"
+    ? [d.roll, d.film].filter(Boolean).join(" · ")
+    : d.kind === "theme"
+      ? "主题"
+      : `${fmt(d.date)} · 散拍`;
+
+// 排版分组：横图独占一行；相邻两张竖图并排成对；落单竖图限高居中。
+type Photo = (typeof d.photos)[number];
+const isPortrait = (p: Photo) => p.src.height > p.src.width;
+type Row = { type: "wide" | "solo"; items: [Photo] } | { type: "pair"; items: [Photo, Photo] };
+const rows: Row[] = [];
+for (let i = 0; i < d.photos.length; i++) {
+  const p = d.photos[i];
+  if (isPortrait(p)) {
+    const next = d.photos[i + 1];
+    if (next && isPortrait(next)) {
+      rows.push({ type: "pair", items: [p, next] });
+      i++;
+    } else {
+      rows.push({ type: "solo", items: [p] });
+    }
+  } else {
+    rows.push({ type: "wide", items: [p] });
+  }
+}
+---
+
+<Layout title={d.title} description={d.note ?? d.title}>
+  <Container>
+    <div class="roll-page" data-pagefind-ignore>
+      <Link href="/album">← 影集</Link>
+
+      <!-- 用 div：全局 header{} 会把任何 <header> 变成 fixed 顶条 -->
+      <div class="roll-head animate">
+        <div class="roll-head-meta">
+          <span class:list={["roll-kicker", { "is-roll": d.kind === "roll" }]}>{kicker}</span>
+          <span class="roll-count">{fmt(d.date)} · {d.photos.length} 张</span>
+        </div>
+        <h1 class="roll-title">{d.title}</h1>
+        {d.note && <p class="roll-note">{d.note}</p>}
+      </div>
+
+      <div class="roll-photos">
+        {
+          rows.map((row) =>
+            row.type === "pair" ? (
+              <div class="row-pair animate">
+                {row.items.map((p) => (
+                  <Image src={p.src} alt={p.alt} width={860} loading="lazy" class="ph" />
+                ))}
+              </div>
+            ) : row.type === "solo" ? (
+              <div class="row-solo animate">
+                <Image src={row.items[0].src} alt={row.items[0].alt} width={1100} loading="lazy" class="ph ph-solo" />
+              </div>
+            ) : (
+              <Image src={row.items[0].src} alt={row.items[0].alt} width={1400} loading="lazy" class="ph ph-wide animate" />
+            ),
+          )
+        }
+      </div>
+
+      <nav class="roll-nav animate">
+        {older ? <a href={`/album/${older.id}`}>← {older.data.title}</a> : <span></span>}
+        {newer ? <a href={`/album/${newer.id}`}>{newer.data.title} →</a> : <span class="roll-nav-end">已是最新一贴</span>}
+      </nav>
+
+      <div aria-hidden="true" class="roll-dinkus">⁂</div>
+    </div>
+  </Container>
+</Layout>
+
+<style is:global>
+  .roll-page { max-width: 44rem; margin: 0 auto; }
+
+  .roll-head { margin-top: 2.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .roll-head-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1rem; }
+  .roll-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--text-quiet, #6b6a64);
+  }
+  .roll-kicker.is-roll { color: var(--accent, #b1462f); }
+  .roll-count { font-size: 0.75rem; letter-spacing: 0.08em; color: var(--text-quiet, #6b6a64); }
+  .roll-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 400;
+    font-family: var(--font-display, ui-serif, Georgia, serif);
+    color: var(--text-strong, #353534);
+  }
+  .roll-note { margin: 0; font-size: 0.875rem; line-height: 1.9; color: var(--text-muted, #5a5852); max-width: 32rem; }
+
+  .roll-photos { margin-top: 2.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+  .ph {
+    display: block;
+    border: 1px solid color-mix(in oklab, var(--text-strong, #353534) 10%, transparent);
+    border-radius: 0.375rem;
+  }
+  .ph-wide { width: 100%; height: auto; }
+  .row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start; }
+  .row-pair .ph { width: 100%; height: auto; }
+  .row-solo { display: flex; justify-content: center; }
+  .ph-solo { max-height: min(540px, 82vh); width: auto; max-width: 100%; height: auto; }
+
+  .roll-nav {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in oklab, var(--text-strong, #353534) 8%, transparent);
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+  }
+  .roll-nav a {
+    color: var(--text-body, #4a4944);
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+  }
+  .roll-nav a:hover { color: var(--accent, #b1462f); }
+  .roll-nav-end { color: var(--text-quiet, #6b6a64); }
+  .roll-dinkus { text-align: center; margin: 4rem 0 1rem; color: var(--text-quiet, #6b6a64); }
+
+  @media (max-width: 560px) {
+    .row-pair { grid-template-columns: 1fr; }
+    .ph-solo { max-height: 70vh; }
+  }
+</style>
